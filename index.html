@@ -104,12 +104,23 @@
       font-weight: 900;
     }
 
+    .expand-row { display: none; }
+    .expand-row td {
+      padding: 8px 12px 16px;
+      border-bottom: 1px solid #000;
+    }
+    .expand-row .expand-label { font-size: 11px; opacity: 0.5; }
+    .expand-row .expand-item { margin-bottom: 6px; }
+    .expand-row .expand-item:last-child { margin-bottom: 0; }
+
     @media (max-width: 768px) {
       body { padding: 12px; }
       h1 { font-size: 28px; }
       table { font-size: 11px; }
       th, td { padding: 8px 6px; }
       .hide-mobile { display: none; }
+      tbody tr:not(.expand-row) { cursor: pointer; }
+      .expand-row.open { display: table-row; }
     }
   </style>
 </head>
@@ -197,6 +208,26 @@
           tr.appendChild(td);
         }
         tbody.appendChild(tr);
+
+        const expandTr = document.createElement('tr');
+        expandTr.className = 'expand-row';
+        const expandTd = document.createElement('td');
+        expandTd.colSpan = 3;
+        const details = [
+          ['PHONE', row.phone],
+          ['EMAIL', row.email],
+          ['BOARD', row.board],
+          ['DATE', row.date]
+        ].filter(d => d[1]);
+        expandTd.innerHTML = details.map(d =>
+          '<div class="expand-item"><span class="expand-label">' + d[0] + '</span><br>' + d[1] + '</div>'
+        ).join('');
+        expandTr.appendChild(expandTd);
+        tbody.appendChild(expandTr);
+
+        tr.addEventListener('click', () => {
+          expandTr.classList.toggle('open');
+        });
       }
     }
 
