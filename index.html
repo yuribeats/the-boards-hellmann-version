@@ -16,6 +16,11 @@
       padding: 24px;
     }
 
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
     h1 {
       font-size: 48px;
       font-weight: 900;
@@ -26,7 +31,6 @@
     .last-updated {
       font-size: 14px;
       font-weight: 900;
-      margin-bottom: 16px;
     }
 
     .separator {
@@ -88,16 +92,19 @@
     }
 
     @media (max-width: 768px) {
-      body { padding: 16px; }
-      h1 { font-size: 32px; }
-      table { font-size: 12px; }
+      body { padding: 12px; }
+      h1 { font-size: 28px; }
+      table { font-size: 11px; min-width: 600px; }
       th, td { padding: 8px 6px; }
+      td.desc { max-width: 200px; }
     }
   </style>
 </head>
 <body>
-  <h1>THE BOARDS</h1>
-  <div class="last-updated" id="lastUpdated">LAST UPDATED: FEBRUARY 8, 2026</div>
+  <div class="header">
+    <h1>THE BOARDS</h1>
+    <div class="last-updated" id="lastUpdated">LAST UPDATED: FEBRUARY 8, 2026</div>
+  </div>
   <hr class="separator">
   <div class="table-wrapper">
     <div class="loading" id="loading">LOADING...</div>
