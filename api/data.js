@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     }
 
     const headers = lines[0].map(h => h.trim().toLowerCase());
-    const typeIdx = headers.indexOf('type');
+    const typeIdx = headers.indexOf('service');
     const dateIdx = headers.indexOf('date uploaded');
     const contactIdx = headers.indexOf('contact info');
     const descIdx = headers.indexOf('site');
