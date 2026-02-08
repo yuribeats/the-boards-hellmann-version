@@ -318,31 +318,23 @@
         feed.classList.add('active');
         feed.innerHTML = '';
 
-        const sorted = [...rows]
-          .filter(r => r['image'])
-          .sort((a, b) => {
-            const da = new Date(a['date uploaded'] || a['date'] || 0);
-            const db = new Date(b['date uploaded'] || b['date'] || 0);
-            return db - da;
-          });
+        const imgRes = await fetch('/api/images');
+        const imgData = await imgRes.json();
+        const images = imgData.images || [];
 
-        if (sorted.length === 0) {
+        if (images.length === 0) {
           feed.innerHTML = '<div class="loading">NO IMAGES</div>';
           return;
         }
 
-        for (const row of sorted) {
+        for (const file of images) {
           const card = document.createElement('div');
           card.className = 'image-card';
           const img = document.createElement('img');
-          img.src = row['image'];
-          img.alt = row['service'] || row['name'] || '';
+          img.src = '/images/' + file;
+          img.alt = file;
+          img.loading = 'lazy';
           card.appendChild(img);
-          const info = document.createElement('div');
-          info.className = 'image-info';
-          const parts = [row['service'], row['name'], row['date uploaded'] || row['date']].filter(Boolean);
-          info.textContent = parts.join(' \u2014 ');
-          card.appendChild(info);
           feed.appendChild(card);
         }
       } else {
