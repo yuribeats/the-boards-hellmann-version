@@ -119,16 +119,13 @@
 
     .menu-overlay {
       display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #fff;
+      position: absolute;
+      top: 60px;
+      left: 24px;
       z-index: 99;
-      padding: 80px 24px;
+      background: #fff;
     }
-    .menu-overlay.open { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .menu-overlay.open { display: block; }
     .menu-overlay a {
       display: block;
       width: 100%;
