@@ -94,6 +94,15 @@
       border-bottom: 1px solid #000;
     }
 
+    .star-col {
+      width: 30px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 16px;
+      user-select: none;
+    }
+    .star-col:hover { opacity: 0.5; }
+
     .loading {
       padding: 40px 0;
       font-size: 16px;
@@ -196,6 +205,8 @@
   <div class="menu-overlay" id="menu">
     <a href="javascript:void(0)" id="menuImage" onclick="switchMode('image')">IMAGE MODE</a>
     <a href="javascript:void(0)" id="menuTable" onclick="switchMode('table')" style="display:none">TABLE MODE</a>
+    <a href="javascript:void(0)" id="menuStar" onclick="switchMode('starred')">&#9733;</a>
+    <a href="javascript:void(0)" id="menuAll" onclick="switchMode('table')" style="display:none">ALL</a>
   </div>
   <div class="header">
     <h1>THE BOARDS</h1>
@@ -220,7 +231,22 @@
     let columns = [];
     let sortCol = null;
     let sortAsc = true;
+    let showStarred = false;
     const MOBILE_COLS = 3;
+
+    function getStarred() {
+      try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
+    }
+    function setStarred(arr) { localStorage.setItem('starred', JSON.stringify(arr)); }
+    function rowKey(row) { return columns.map(c => row[c] || '').join('|'); }
+    function isStarred(row) { return getStarred().includes(rowKey(row)); }
+    function toggleStar(row) {
+      const key = rowKey(row);
+      const s = getStarred();
+      const i = s.indexOf(key);
+      if (i >= 0) s.splice(i, 1); else s.push(key);
+      setStarred(s);
+    }
 
     async function load() {
       try {
@@ -252,6 +278,11 @@
     function buildHead() {
       const thead = document.getElementById('thead');
       thead.innerHTML = '';
+      const starTh = document.createElement('th');
+      starTh.textContent = '\u2605';
+      starTh.className = 'star-col';
+      starTh.style.cursor = 'default';
+      thead.appendChild(starTh);
       columns.forEach((col, i) => {
         const th = document.createElement('th');
         th.dataset.col = col;
@@ -291,8 +322,31 @@
         });
       }
 
-      for (const row of sorted) {
+      const filtered = showStarred ? sorted.filter(r => isStarred(r)) : sorted;
+
+      if (showStarred && filtered.length === 0) {
         const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = columns.length + 1;
+        td.textContent = 'NO STARRED LISTINGS';
+        td.style.textAlign = 'center';
+        td.style.padding = '40px 0';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      for (const row of filtered) {
+        const tr = document.createElement('tr');
+        const starTd = document.createElement('td');
+        starTd.className = 'star-col';
+        starTd.textContent = isStarred(row) ? '\u2605' : '\u2606';
+        starTd.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleStar(row);
+          render();
+        });
+        tr.appendChild(starTd);
         columns.forEach((col, i) => {
           const td = document.createElement('td');
           td.textContent = row[col] || '';
@@ -306,7 +360,7 @@
           const expandTr = document.createElement('tr');
           expandTr.className = 'expand-row';
           const expandTd = document.createElement('td');
-          expandTd.colSpan = MOBILE_COLS;
+          expandTd.colSpan = MOBILE_COLS + 1;
           expandTd.innerHTML = hiddenCols
             .filter(col => row[col])
             .map(col => '<div class="expand-item"><span class="expand-label">' + col.toUpperCase() + '</span><br>' + row[col] + '</div>')
@@ -325,7 +379,24 @@
     async function switchMode(mode) {
       document.getElementById('menu').classList.remove('open');
       document.getElementById('menuImage').style.display = mode === 'image' ? 'none' : '';
-      document.getElementById('menuTable').style.display = mode === 'table' ? 'none' : '';
+      document.getElementById('menuTable').style.display = (mode === 'table' && !showStarred) ? 'none' : '';
+      document.getElementById('menuStar').style.display = mode === 'starred' ? 'none' : '';
+      document.getElementById('menuAll').style.display = mode === 'starred' ? '' : 'none';
+
+      if (mode === 'starred') {
+        showStarred = true;
+        document.getElementById('imageFeed').classList.remove('active');
+        document.getElementById('modeLabel').style.display = 'none';
+        document.getElementById('separator2').style.display = 'none';
+        document.getElementById('tableWrapper').style.display = '';
+        document.getElementById('menuImage').style.display = '';
+        document.getElementById('menuTable').style.display = 'none';
+        render();
+        return;
+      }
+
+      showStarred = false;
+
       if (mode === 'image') {
         document.getElementById('tableWrapper').style.display = 'none';
         document.getElementById('modeLabel').textContent = 'IMAGE MODE';
@@ -359,6 +430,10 @@
         document.getElementById('modeLabel').style.display = 'none';
         document.getElementById('separator2').style.display = 'none';
         document.getElementById('tableWrapper').style.display = '';
+        document.getElementById('menuStar').style.display = '';
+        document.getElementById('menuAll').style.display = 'none';
+        document.getElementById('menuTable').style.display = 'none';
+        render();
       }
     }
 
