@@ -840,6 +840,7 @@
       .faq-wrap { padding: 16px 0; }
       .faq-q { font-size: 13px; }
       .faq-a { font-size: 11px; }
+      .mobile-hide { display: none; }
       .submit-form { padding: 16px 0; }
       .event-detail { padding: 16px 0; }
       .attend-row { font-size: 13px; }
@@ -1248,12 +1249,13 @@
       thead.innerHTML = '';
       const starTh = document.createElement('th');
       starTh.textContent = '\u2605';
-      starTh.className = 'star-col';
+      starTh.className = 'star-col mobile-hide';
       starTh.style.cursor = 'default';
       thead.appendChild(starTh);
       VISIBLE_COLS.forEach(col => {
         const th = document.createElement('th');
         th.dataset.col = col;
+        if (col !== 'service' && col !== 'name') th.className = 'mobile-hide';
         th.textContent = COL_DISPLAY[col] || col.toUpperCase();
         const arrow = document.createElement('span');
         arrow.className = 'sort-arrow';
@@ -1383,7 +1385,7 @@
       for (const row of filtered) {
         const tr = document.createElement('tr');
         const starTd = document.createElement('td');
-        starTd.className = 'star-col';
+        starTd.className = 'star-col mobile-hide';
         starTd.textContent = isStarred(row) ? '\u2605' : '\u2606';
         starTd.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1393,6 +1395,7 @@
         tr.appendChild(starTd);
         VISIBLE_COLS.forEach(col => {
           const td = document.createElement('td');
+          if (col !== 'service' && col !== 'name') td.classList.add('mobile-hide');
           if (col === 'site' && row[col]) {
             const a = document.createElement('a');
             let href = row[col];
