@@ -1184,6 +1184,7 @@
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
     }
     function setStarred(arr) { localStorage.setItem('starred', JSON.stringify(arr)); }
+    function firstName(n) { return n ? n.split(' ')[0] : ''; }
     function rowKey(row) { return columns.map(c => row[c] || '').join('|'); }
     function isStarred(row) { return getStarred().includes(rowKey(row)); }
     function toggleStar(row) {
@@ -1407,7 +1408,7 @@
             a.style.fontWeight = '900';
             td.appendChild(a);
           } else {
-            td.textContent = row[col] || '';
+            td.textContent = col === 'author' ? firstName(row[col]) : (row[col] || '');
           }
           if (col === 'name' || col === 'description') {
             td.className = 'name-link';
@@ -1461,7 +1462,7 @@
         if (!val) return;
         const field = document.createElement('div');
         field.className = 'profile-field';
-        let displayVal = val;
+        let displayVal = col === 'author' ? firstName(val) : val;
         if (col === 'site') {
           let href = val;
           if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
@@ -1905,7 +1906,7 @@
       let html = '';
       if (p.image) html += '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards-hellmann-version/main/data/images/' + escapeHtml(p.image) + '" alt="">';
       if (p.title) html += '<div class="news-post-title">' + parseLinks(p.title) + '</div>';
-      html += '<div class="news-post-date">' + escapeHtml(p.date) + (p.author ? ' &mdash; ' + escapeHtml(p.author) : '') + '</div>';
+      html += '<div class="news-post-date">' + escapeHtml(p.date) + (p.author ? ' &mdash; ' + escapeHtml(firstName(p.author)) : '') + '</div>';
 
       if (p.isPoll && p.pollOptions) {
         html += '<div class="poll-options" id="poll-' + escapeHtml(p.id) + '"></div>';
@@ -2000,7 +2001,7 @@
       for (const c of comments) {
         const el = document.createElement('div');
         el.className = 'news-comment';
-        el.innerHTML = '<div class="news-comment-meta">' + escapeHtml(c.name) + ' &mdash; ' + escapeHtml(c.date) + '</div>' + escapeHtml(c.text);
+        el.innerHTML = '<div class="news-comment-meta">' + escapeHtml(firstName(c.name)) + ' &mdash; ' + escapeHtml(c.date) + '</div>' + escapeHtml(c.text);
         listEl.appendChild(el);
       }
     }
@@ -2022,7 +2023,7 @@
         const myVote = voters.includes(currentUser);
         const el = document.createElement('div');
         el.className = 'poll-option' + (myVote ? ' voted' : '');
-        let voterText = voters.length > 0 ? voters.join(', ') + ' (' + voters.length + ')' : '';
+        let voterText = voters.length > 0 ? voters.map(firstName).join(', ') + ' (' + voters.length + ')' : '';
         el.innerHTML = '<div class="poll-option-text">' + escapeHtml(options[i]) + '</div>' + (voterText ? '<div class="poll-option-voters">' + escapeHtml(voterText) + '</div>' : '');
         el.addEventListener('click', () => {
           castVote(newsId, i, options, container);
@@ -2305,7 +2306,7 @@
         ['LOCATION', ev.location],
         ['CONTACT', ev.contact],
         ['SITE', ev.site],
-        ['ADDED BY', ev.author]
+        ['ADDED BY', firstName(ev.author)]
       ];
 
       for (const [label, val] of fields) {
@@ -2443,7 +2444,7 @@
       for (const a of attendees) {
         const item = document.createElement('div');
         item.className = 'guest-item';
-        item.innerHTML = escapeHtml(a.name) + (a.attendAll ? '<span class="guest-kids">ALL</span>' : '');
+        item.innerHTML = escapeHtml(firstName(a.name)) + (a.attendAll ? '<span class="guest-kids">ALL</span>' : '');
         wrap.appendChild(item);
         if (a.withKids && CHILDREN[a.name]) {
           for (const kid of CHILDREN[a.name]) {
@@ -2451,7 +2452,7 @@
             shownKids.add(kid);
             const kidItem = document.createElement('div');
             kidItem.className = 'guest-item';
-            kidItem.innerHTML = escapeHtml(kid) + '<span class="guest-kids">CHILD</span>';
+            kidItem.innerHTML = escapeHtml(firstName(kid)) + '<span class="guest-kids">CHILD</span>';
             wrap.appendChild(kidItem);
           }
         }
