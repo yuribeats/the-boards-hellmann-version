@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>THE BOARDS - ADMIN</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -58,19 +58,82 @@
     .card-actions { margin-top: 12px; display: flex; gap: 8px; }
     .empty { text-align: center; padding: 60px 0; font-size: 16px; }
     .error { text-align: center; padding: 16px; color: red; font-size: 14px; }
-    .back-link {
+
+    .burger {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      cursor: default;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .burger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: #000;
+    }
+    .menu-overlay {
+      display: none;
+      position: absolute;
+      top: 44px;
+      left: 24px;
+      z-index: 99;
+    }
+    .menu-overlay.open { display: inline-block; border: 2px solid #000; background: #E3E1DB; }
+    .menu-overlay a {
+      display: block;
       font-size: 14px;
       font-weight: 900;
-      text-decoration: none;
       color: #000;
-      display: inline-block;
-      margin-bottom: 16px;
+      text-decoration: none;
+      text-align: center;
+      padding: 14px 8px;
     }
-    .back-link:hover { opacity: 0.5; }
+    .menu-overlay a + a { border-top: 2px solid #000; }
+    .menu-overlay a:hover { background: #000; color: #fff; }
+
+    .post-form {
+      max-width: 500px;
+      margin: 24px auto;
+    }
+    .post-form input, .post-form textarea {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+      width: 100%;
+    }
+    .post-form input::placeholder, .post-form textarea::placeholder { color: #999; }
+    .post-form textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+    .post-form label {
+      display: block;
+      font-size: 11px;
+      opacity: 0.5;
+      margin-bottom: 4px;
+      margin-top: 16px;
+    }
+    .post-form label:first-child { margin-top: 0; }
+    .post-msg {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
     @media (max-width: 768px) {
       body { padding: 12px; }
       h1 { font-size: 24px; letter-spacing: 6px; }
       .separator { margin: 0 -12px; }
+      .burger { top: 12px; left: 12px; }
+      .menu-overlay { top: 32px; left: 12px; }
+      .menu-overlay a { font-size: 11px; padding: 10px 6px; }
     }
   </style>
 </head>
@@ -87,16 +150,53 @@
   </div>
 
   <div id="adminView" style="display:none">
-    <a href="/" class="back-link"><span style="display:inline-block;transform:translateY(-1px)">&larr;</span> BACK TO SITE</a>
-    <h1>PENDING SUBMISSIONS</h1>
-    <hr class="separator">
-    <div id="pendingList"></div>
+    <div class="burger" onclick="document.getElementById('adminMenu').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="menu-overlay" id="adminMenu">
+      <a href="javascript:void(0)" onclick="showSection('submissions')">SUBMISSIONS</a>
+      <a href="javascript:void(0)" onclick="showSection('post')">MAKE A POST</a>
+      <a href="/">SITE</a>
+    </div>
+
+    <div id="submissionsSection">
+      <h1>PENDING SUBMISSIONS</h1>
+      <hr class="separator">
+      <div id="pendingList"></div>
+    </div>
+
+    <div id="postSection" style="display:none">
+      <h1>MAKE A POST</h1>
+      <hr class="separator">
+      <div class="post-form">
+        <label>TITLE</label>
+        <input type="text" id="postTitle" placeholder="POST TITLE">
+        <label>BODY</label>
+        <textarea id="postBody" placeholder="POST CONTENT"></textarea>
+        <button class="btn" style="margin-top:24px;width:100%" onclick="submitPost()">POST</button>
+        <div class="post-msg" id="postMsg"></div>
+      </div>
+    </div>
   </div>
 
   <script>
     let adminPassword = '';
     const FIELDS = ['service', 'name', 'site', 'phone', 'email', 'date uploaded', 'neighborhood', 'description'];
     const FIELD_DISPLAY = { 'service': 'SERVICE TYPE' };
+
+    function showSection(section) {
+      document.getElementById('adminMenu').classList.remove('open');
+      document.getElementById('submissionsSection').style.display = section === 'submissions' ? '' : 'none';
+      document.getElementById('postSection').style.display = section === 'post' ? '' : 'none';
+    }
+
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('adminMenu');
+      const burger = e.target.closest('.burger');
+      if (menu && menu.classList.contains('open') && !menu.contains(e.target) && !burger) {
+        menu.classList.remove('open');
+      }
+    });
 
     async function login() {
       adminPassword = document.getElementById('passwordInput').value;
@@ -188,6 +288,37 @@
       } catch (e) {
         btn.textContent = 'ERROR';
         setTimeout(() => loadPending(), 1000);
+      }
+    }
+
+    async function submitPost() {
+      const title = document.getElementById('postTitle').value.trim();
+      const body = document.getElementById('postBody').value.trim();
+      const msg = document.getElementById('postMsg');
+
+      if (!body) {
+        msg.textContent = 'POST BODY IS REQUIRED';
+        return;
+      }
+
+      msg.textContent = 'POSTING...';
+
+      try {
+        const res = await fetch('/api/post', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ title, body })
+        });
+        if (!res.ok) throw new Error('Failed');
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postBody').value = '';
+        msg.textContent = 'POSTED';
+        setTimeout(() => { msg.textContent = ''; }, 2000);
+      } catch (e) {
+        msg.textContent = 'FAILED TO POST';
       }
     }
 
