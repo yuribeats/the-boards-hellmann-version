@@ -1,7 +1,6 @@
 {
   "rewrites": [
     { "source": "/submit", "destination": "/index.html" },
-    { "source": "/visualize", "destination": "/index.html" },
     { "source": "/starred", "destination": "/index.html" },
     { "source": "/news", "destination": "/index.html" }
   ]
