@@ -314,8 +314,7 @@
       align-items: center;
       justify-content: center;
     }
-    .custom-check-box.checked { background: #000; }
-    .custom-check-box.checked::after { content: ''; display: block; width: 6px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); margin-top: -2px; }
+    .custom-check-box.checked { background: #000; color: #fff; font-size: 10px; line-height: 14px; }
     .profile-image {
       width: 100%;
       max-width: 500px;
@@ -490,7 +489,7 @@
     <label>IMAGE</label>
     <input type="file" id="fImage" class="file-upload-input" accept="image/*" onchange="handleFileSelect(this)">
     <label for="fImage" class="file-upload-label" id="fImageLabel">CHOOSE IMAGE</label>
-    <div class="custom-check" onclick="document.getElementById('fVerify').classList.toggle('checked')">
+    <div class="custom-check" onclick="var b=document.getElementById('fVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
       <div class="custom-check-box" id="fVerify"></div>
       <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF</span>
     </div>
