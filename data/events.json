@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "1770649892929",
+    "event": "Family dinner",
+    "author": "YURI RYBAK",
+    "shortName": "dinner",
+    "date": "3/8/2026",
+    "location": "409 westview stree",
+    "contact": "9175142649",
+    "site": "",
+    "repeatWeekly": true,
+    "repeatMonthly": true,
+    "submitted": "2/9/2026",
+    "image": "event_1770649892929.jpg"
+  }
+]
