@@ -664,11 +664,13 @@
     </div>
     <hr class="separator">
     <div class="login-screen">
-      <div class="custom-select" id="loginSelect">
+      <input type="password" id="loginPassword" placeholder="PASSWORD" onkeydown="if(event.key==='Enter')checkPassword()" style="font-family:Arial,Helvetica,sans-serif;font-weight:900;text-transform:uppercase;font-size:14px;padding:10px 12px;border:2px solid #000;width:100%;margin-bottom:16px;text-align:center">
+      <div id="loginPasswordMsg" style="font-size:12px;margin-bottom:16px;color:#000;display:none">WRONG PASSWORD</div>
+      <div class="custom-select" id="loginSelect" style="display:none">
         <div class="custom-select-trigger" onclick="document.getElementById('loginSelect').classList.toggle('open')">SELECT YOUR NAME</div>
         <div class="custom-select-options" id="loginOptions"></div>
       </div>
-      <button class="submit-btn" id="loginBtn" onclick="doLogin()">ENTER</button>
+      <button class="submit-btn" id="loginBtn" onclick="doLogin()" style="display:none">ENTER</button>
     </div>
   </div>
 
@@ -866,6 +868,18 @@
       }
     }
 
+    function checkPassword() {
+      const pw = document.getElementById('loginPassword').value.trim().toLowerCase();
+      if (pw === 'hhr') {
+        document.getElementById('loginPassword').style.display = 'none';
+        document.getElementById('loginPasswordMsg').style.display = 'none';
+        document.getElementById('loginSelect').style.display = '';
+        document.getElementById('loginBtn').style.display = '';
+      } else {
+        document.getElementById('loginPasswordMsg').style.display = '';
+      }
+    }
+
     function doLogin() {
       const val = document.getElementById('loginSelect').dataset.value;
       if (!val) return;
@@ -880,6 +894,11 @@
       document.getElementById('menu').classList.remove('open');
       document.getElementById('siteContent').classList.remove('active');
       document.getElementById('loginScreen').style.display = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginPassword').style.display = '';
+      document.getElementById('loginPasswordMsg').style.display = 'none';
+      document.getElementById('loginSelect').style.display = 'none';
+      document.getElementById('loginBtn').style.display = 'none';
       document.querySelector('#loginSelect .custom-select-trigger').textContent = 'SELECT YOUR NAME';
       delete document.getElementById('loginSelect').dataset.value;
     }
