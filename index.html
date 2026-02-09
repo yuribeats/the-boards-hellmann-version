@@ -567,6 +567,29 @@
       font-size: 14px;
     }
 
+    .faq-wrap {
+      display: none;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 24px 0;
+    }
+    .faq-wrap.active { display: block; }
+    .faq-item {
+      padding: 16px 0;
+      border-bottom: 2px solid #000;
+    }
+    .faq-q {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .faq-a {
+      font-size: 12px;
+      font-weight: 900;
+      opacity: 0.6;
+      line-height: 1.5;
+    }
+
     .login-screen {
       display: flex;
       flex-direction: column;
@@ -654,7 +677,8 @@
     <span></span><span></span><span></span>
   </div>
   <div class="menu-overlay" id="menu">
-    <a href="/" id="menuTable" onclick="event.preventDefault();navigate('table')" style="display:none">VENDORS</a>
+    <a href="/" id="menuFaq" onclick="event.preventDefault();navigate('faq')" style="display:none">FAQ</a>
+    <a href="/vendors" id="menuTable" onclick="event.preventDefault();navigate('table')">VENDORS</a>
     <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')">&#9733;</a>
     <a href="/" id="menuAll" onclick="event.preventDefault();navigate('table')" style="display:none">VENDORS</a>
     <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')">NEWS</a>
@@ -668,7 +692,7 @@
     <a href="/submit-event" onclick="event.preventDefault();navigate('submit-event')">EVENT</a>
   </div>
   <div class="header">
-    <h1 onclick="navigate('table')">HELLMANN HARPER RYBAK</h1>
+    <h1 onclick="navigate('faq')">HELLMANN HARPER RYBAK</h1>
     <div class="last-updated-corner" id="lastUpdated"><span class="lu-label">LAST UPDATED</span><span class="lu-date">FEBRUARY 8, 2026</span></div>
   </div>
   <hr class="separator">
@@ -676,6 +700,36 @@
   <hr class="separator" id="separator2" style="display:none">
   <div class="profile" id="profile"></div>
   <div class="news-feed" id="newsFeed"></div>
+  <div class="faq-wrap" id="faqWrap">
+    <div class="faq-item">
+      <div class="faq-q">WHAT IS THIS SITE?</div>
+      <div class="faq-a">A PRIVATE FAMILY BOARD FOR THE HELLMANN, HARPER AND RYBAK FAMILIES. SHARE VENDORS, POST NEWS AND COORDINATE EVENTS.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">VENDORS</div>
+      <div class="faq-a">A SHARED LIST OF RECOMMENDED SERVICE PROVIDERS. PLUMBERS, ELECTRICIANS, DOCTORS, ANYTHING USEFUL. BROWSE THE LIST, STAR YOUR FAVORITES, TAP A NAME TO SEE FULL DETAILS.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">NEWS</div>
+      <div class="faq-a">A FAMILY NEWS FEED. POST UPDATES, ANNOUNCEMENTS OR ANYTHING THE FAMILY SHOULD KNOW ABOUT. YOUR NAME IS AUTOMATICALLY ATTACHED AS AUTHOR.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">EVENTS</div>
+      <div class="faq-a">A SHARED CALENDAR. ADD EVENTS WITH A DATE AND LOCATION. EVENTS CAN REPEAT WEEKLY OR MONTHLY. OPEN AN EVENT TO MARK YOURSELF AS ATTENDING. IF YOU HAVE KIDS, CHECK "WITH KIDS" AND THEY WILL BE LISTED BY NAME.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">SUBMITTING</div>
+      <div class="faq-a">USE THE SUBMIT MENU TO ADD A VENDOR, NEWS POST OR EVENT. EVERYTHING YOU SUBMIT IS TAGGED WITH YOUR NAME AND GOES LIVE IMMEDIATELY.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">STARS</div>
+      <div class="faq-a">TAP THE STAR ON ANY VENDOR, NEWS POST OR EVENT TO BOOKMARK IT. VIEW ALL YOUR STARRED ITEMS FROM THE STAR ICON IN THE MENU.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">WHO CAN SEE THIS?</div>
+      <div class="faq-a">ONLY FAMILY MEMBERS WHO LOG IN. THERE ARE NO PASSWORDS. YOU SELECT YOUR NAME AND YOU ARE IN.</div>
+    </div>
+  </div>
   <div class="submit-form" id="submitForm">
     <label>SERVICE TYPE</label>
     <div class="custom-select" id="fServiceSelect">
@@ -1170,6 +1224,18 @@
       document.getElementById('calendarWrap').classList.remove('active');
       document.getElementById('eventDetail').classList.remove('active');
       document.getElementById('eventDetail').innerHTML = '';
+      document.getElementById('faqWrap').classList.remove('active');
+      document.getElementById('menuFaq').style.display = (mode === 'faq') ? 'none' : '';
+
+      if (mode === 'faq') {
+        document.getElementById('tableWrapper').style.display = 'none';
+        document.getElementById('modeLabel').style.display = 'none';
+        document.getElementById('separator2').style.display = 'none';
+        document.getElementById('faqWrap').classList.add('active');
+        document.getElementById('menuTable').style.display = '';
+        updateMenuDividers();
+        return;
+      }
 
       if (mode === 'news') {
         document.getElementById('tableWrapper').style.display = 'none';
@@ -2025,7 +2091,7 @@
     }
 
     function navigate(mode) {
-      const paths = { table: '/', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', news: '/news', events: '/events' };
+      const paths = { faq: '/', table: '/vendors', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', news: '/news', events: '/events' };
       history.pushState(null, '', paths[mode] || '/');
       switchMode(mode);
     }
@@ -2045,13 +2111,14 @@
       profile.classList.remove('active');
       profile.innerHTML = '';
       if (p.startsWith('/profile/')) { openProfileFromUrl(); return; }
-      if (p === '/starred') switchMode('starred');
+      if (p === '/vendors') switchMode('table');
+      else if (p === '/starred') switchMode('starred');
       else if (p === '/submit') switchMode('submit');
       else if (p === '/submit-news') switchMode('submit-news');
       else if (p === '/submit-event') switchMode('submit-event');
       else if (p === '/news') switchMode('news');
       else if (p === '/events') switchMode('events');
-      else switchMode('table');
+      else switchMode('faq');
     });
 
     initLogin();
@@ -2060,12 +2127,14 @@
       load().then(() => {
         const p = location.pathname;
         if (p.startsWith('/profile/')) openProfileFromUrl();
+        else if (p === '/vendors') switchMode('table');
         else if (p === '/starred') switchMode('starred');
         else if (p === '/submit') switchMode('submit');
         else if (p === '/submit-news') switchMode('submit-news');
         else if (p === '/submit-event') switchMode('submit-event');
         else if (p === '/news') switchMode('news');
         else if (p === '/events') switchMode('events');
+        else switchMode('faq');
       });
     }
   </script>
