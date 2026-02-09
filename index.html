@@ -184,6 +184,7 @@
       border-top: 2px solid #000;
     }
     .menu-overlay a:hover { background: #000; color: #fff; }
+    #submitMenu.open { border-left: none; }
 
     .news-feed {
       display: none;
@@ -508,7 +509,7 @@
     <label for="fImage" class="file-upload-label" id="fImageLabel">CHOOSE IMAGE</label>
     <div class="custom-check" onclick="var b=document.getElementById('fVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
       <div class="custom-check-box" id="fVerify"></div>
-      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTERED HERE WILL BE POSTED PUBLICLY</span>
+      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTER HERE WILL BE POSTED PUBLICLY</span>
     </div>
     <button class="submit-btn" id="submitBtn" onclick="submitListing()">SUBMIT</button>
     <div class="submit-msg" id="submitMsg"></div>
@@ -525,7 +526,7 @@
     <label for="nImage" class="file-upload-label" id="nImageLabel">CHOOSE IMAGE</label>
     <div class="custom-check" onclick="var b=document.getElementById('nVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
       <div class="custom-check-box" id="nVerify"></div>
-      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTERED HERE WILL BE POSTED PUBLICLY</span>
+      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTER HERE WILL BE POSTED PUBLICLY</span>
     </div>
     <button class="submit-btn" id="newsSubmitBtn" onclick="submitNews()">SUBMIT</button>
     <div class="submit-msg" id="newsSubmitMsg"></div>
@@ -682,8 +683,8 @@
         return;
       }
       const rect = anchor.getBoundingClientRect();
-      sm.style.left = (rect.right + 2) + 'px';
-      sm.style.top = rect.top + 'px';
+      sm.style.left = (rect.right) + 'px';
+      sm.style.top = (rect.top - 2) + 'px';
       sm.classList.add('open');
     }
 
@@ -839,7 +840,7 @@
       document.getElementById('menuStar').style.display = mode === 'starred' ? 'none' : '';
       document.getElementById('menuAll').style.display = mode === 'starred' ? '' : 'none';
       document.getElementById('menuNews').style.display = mode === 'news' ? 'none' : '';
-      document.getElementById('menuSubmit').style.display = (mode === 'submit' || mode === 'submit-news') ? 'none' : '';
+      document.getElementById('menuSubmit').style.display = '';
       document.getElementById('submitMenu').classList.remove('open');
       document.getElementById('submitForm').classList.remove('active');
       document.getElementById('newsSubmitForm').classList.remove('active');
