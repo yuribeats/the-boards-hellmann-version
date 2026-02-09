@@ -1,3 +1,5 @@
+import { sendNotifications } from './lib/notify.js';
+
 const REPO = 'yuribeats/the-boards-hellmann-version';
 const FILE_PATH = 'data/approved.json';
 const BRANCH = 'main';
@@ -74,6 +76,8 @@ export default async function handler(req, res) {
       }
     );
     if (!resp.ok) throw new Error('Failed to write approved.json');
+
+    sendNotifications({ type: 'vendors', actor: author, title: name, body: service, token }).catch(() => {});
 
     return res.status(200).json({ success: true });
   } catch (err) {

@@ -1,3 +1,5 @@
+import { sendNotifications } from './lib/notify.js';
+
 const REPO = 'yuribeats/the-boards-hellmann-version';
 const FILE_PATH = 'data/comments.json';
 const BRANCH = 'main';
@@ -54,6 +56,8 @@ export default async function handler(req, res) {
       }
     );
     if (!resp.ok) throw new Error('Failed to write comments.json');
+
+    sendNotifications({ type: 'comments', actor: username, title: username + ' commented', body: text.slice(0, 100), token }).catch(() => {});
 
     return res.status(200).json({ success: true, comments: comments[newsId] });
   } catch (err) {

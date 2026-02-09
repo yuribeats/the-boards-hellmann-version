@@ -1,3 +1,5 @@
+import { sendNotifications } from './lib/notify.js';
+
 const REPO = 'yuribeats/the-boards-hellmann-version';
 const FILE_PATH = 'data/news.json';
 const BRANCH = 'main';
@@ -81,6 +83,8 @@ export default async function handler(req, res) {
       }
     );
     if (!resp.ok) throw new Error('Failed to write news.json');
+
+    sendNotifications({ type: 'news', actor: author, title: title || 'New Post', body: body ? body.slice(0, 100) : '', token }).catch(() => {});
 
     return res.status(200).json({ success: true });
   } catch (err) {

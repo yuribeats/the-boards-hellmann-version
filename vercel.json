@@ -6,6 +6,7 @@
     { "source": "/submit", "destination": "/index.html" },
     { "source": "/submit-news", "destination": "/index.html" },
     { "source": "/submit-event", "destination": "/index.html" },
+    { "source": "/submit-user", "destination": "/index.html" },
     { "source": "/starred", "destination": "/index.html" },
     { "source": "/news", "destination": "/index.html" },
     { "source": "/events", "destination": "/index.html" },

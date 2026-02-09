@@ -1,3 +1,5 @@
+import { sendNotifications } from './lib/notify.js';
+
 const REPO = 'yuribeats/the-boards-hellmann-version';
 const FILE_PATH = 'data/attendance.json';
 const BRANCH = 'main';
@@ -14,7 +16,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { eventId, username, attending, withKids } = req.body;
+    const { eventId, username, attending, withKids, attendAll } = req.body;
     if (!eventId || !username) return res.status(400).json({ error: 'eventId and username are required' });
 
     let attendance = {};
@@ -39,8 +41,9 @@ export default async function handler(req, res) {
     if (attending) {
       if (idx >= 0) {
         list[idx].withKids = !!withKids;
+        list[idx].attendAll = !!attendAll;
       } else {
-        list.push({ name: username, withKids: !!withKids });
+        list.push({ name: username, withKids: !!withKids, attendAll: !!attendAll });
       }
     } else {
       if (idx >= 0) list.splice(idx, 1);
@@ -62,6 +65,8 @@ export default async function handler(req, res) {
       }
     );
     if (!resp.ok) throw new Error('Failed to write attendance.json');
+
+    sendNotifications({ type: 'responses', actor: username, title: username + (attending ? ' is attending' : ' is not attending'), body: 'Event ' + eventId, token }).catch(() => {});
 
     return res.status(200).json({ success: true, attendees: attendance[eventId] });
   } catch (err) {

@@ -360,6 +360,42 @@
     .custom-check-box.checked { background: #000; color: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 18px; font-weight: 900; line-height: 28px; text-align: center; }
     .custom-check-box.small { width: 14px; height: 14px; min-width: 14px; }
     .custom-check-box.small.checked { font-size: 10px; line-height: 14px; }
+    .add-child-btn {
+      font-size: 12px;
+      font-weight: 900;
+      border: 2px solid #000;
+      padding: 6px 14px;
+      display: inline-block;
+      cursor: default;
+    }
+    .add-child-btn:hover { background: #000; color: #fff; }
+    .child-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .child-row input {
+      flex: 1;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+    }
+    .child-remove {
+      font-size: 16px;
+      font-weight: 900;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #000;
+      cursor: default;
+    }
+    .child-remove:hover { background: #000; color: #fff; }
     .profile-image {
       width: 100%;
       max-width: 500px;
@@ -846,6 +882,7 @@
     <a href="/submit" onclick="event.preventDefault();navigate('submit')">VENDOR</a>
     <a href="/submit-news" onclick="event.preventDefault();navigate('submit-news')">NEWS</a>
     <a href="/submit-event" onclick="event.preventDefault();navigate('submit-event')">EVENT</a>
+    <a href="/submit-user" onclick="event.preventDefault();navigate('submit-user')">NEW USER</a>
   </div>
   <div class="header">
     <h1 onclick="navigate('faq')">HELLMANN HARPER RYBAK</h1>
@@ -1012,6 +1049,25 @@
     <button class="submit-btn" id="eventSubmitBtn" onclick="submitEvent()">SUBMIT</button>
     <div class="submit-msg" id="eventSubmitMsg"></div>
   </div>
+  <div class="submit-form" id="userSubmitForm">
+    <label>NAME</label>
+    <input type="text" id="uName" placeholder="FULL NAME">
+    <label>CHILDREN</label>
+    <div id="uChildrenList"></div>
+    <div style="margin-top:8px">
+      <span class="add-child-btn" onclick="addChildField()">+ ADD CHILD</span>
+    </div>
+    <div class="custom-check" style="align-items:center;margin-top:16px" onclick="var b=document.getElementById('uNotifyEmail');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':'';document.getElementById('uEmailRow').style.display=b.classList.contains('checked')?'block':'none'">
+      <div class="custom-check-box small" id="uNotifyEmail"></div>
+      <span>NOTIFY BY EMAIL</span>
+    </div>
+    <div id="uEmailRow" style="display:none">
+      <label>EMAIL ADDRESS</label>
+      <input type="email" id="uEmail" placeholder="EMAIL ADDRESS">
+    </div>
+    <button class="submit-btn" id="userSubmitBtn" onclick="submitUser()">SUBMIT</button>
+    <div class="submit-msg" id="userSubmitMsg"></div>
+  </div>
   <div class="submit-modal" id="submitModal" onclick="submitModal.classList.remove('active'); switchMode('table');">
     <div class="submit-modal-box">THANK YOU. YOUR SUBMISSION IS NOW LIVE.</div>
   </div>
@@ -1038,6 +1094,22 @@
       'DAVID HARPER HELLMANN': ['LUCY HARPER HELLMANN']
     };
     let currentUser = localStorage.getItem('currentUser') || '';
+
+    async function loadDynamicUsers() {
+      try {
+        const res = await fetch('/api/users');
+        const data = await res.json();
+        const dynamicUsers = data.users || [];
+        for (const u of dynamicUsers) {
+          if (!USERS.includes(u.name)) {
+            USERS.push(u.name);
+          }
+          if (u.children && u.children.length > 0 && !CHILDREN[u.name]) {
+            CHILDREN[u.name] = u.children;
+          }
+        }
+      } catch {}
+    }
 
     function initLogin() {
       const opts = document.getElementById('loginOptions');
@@ -1103,7 +1175,7 @@
     let sortAsc = false;
     let showStarred = false;
     let serviceFilter = null;
-    const VISIBLE_COLS = ['service', 'name', 'author', 'site', 'date uploaded', 'description'];
+    const VISIBLE_COLS = ['service', 'name', 'phone', 'author', 'site', 'date uploaded', 'description'];
     const PROFILE_COLS = ['name', 'service', 'author', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
     const COL_DISPLAY = { 'service': 'SERVICE TYPE', 'date uploaded': 'ADDED', 'author': 'ADDED BY' };
 
@@ -1421,6 +1493,7 @@
       document.getElementById('submitForm').classList.remove('active');
       document.getElementById('newsSubmitForm').classList.remove('active');
       document.getElementById('eventSubmitForm').classList.remove('active');
+      document.getElementById('userSubmitForm').classList.remove('active');
       document.getElementById('newsFeed').classList.remove('active');
       document.getElementById('starredNewsWrap').classList.remove('active');
       document.getElementById('starredNewsWrap').innerHTML = '';
@@ -1513,6 +1586,24 @@
         document.getElementById('eventSubmitMsg').textContent = '';
         document.getElementById('eventSubmitBtn').disabled = false;
         document.getElementById('eventSubmitBtn').textContent = 'SUBMIT';
+        return;
+      }
+
+      if (mode === 'submit-user') {
+        document.getElementById('tableWrapper').style.display = 'none';
+        document.getElementById('modeLabel').textContent = 'ADD NEW USER';
+        document.getElementById('modeLabel').style.display = '';
+        document.getElementById('separator2').style.display = '';
+        document.getElementById('userSubmitForm').classList.add('active');
+        document.getElementById('userSubmitMsg').textContent = '';
+        document.getElementById('userSubmitBtn').disabled = false;
+        document.getElementById('userSubmitBtn').textContent = 'SUBMIT';
+        document.getElementById('uName').value = '';
+        document.getElementById('uChildrenList').innerHTML = '';
+        document.getElementById('uNotifyEmail').classList.remove('checked');
+        document.getElementById('uNotifyEmail').textContent = '';
+        document.getElementById('uEmailRow').style.display = 'none';
+        document.getElementById('uEmail').value = '';
         return;
       }
 
@@ -2235,6 +2326,18 @@
       const attendLabel = document.createElement('span');
       attendLabel.textContent = 'ATTENDING';
 
+      const isRecurring = !!(ev.repeatWeekly || ev.repeatMonthly);
+
+      const attendAllRow = document.createElement('div');
+      attendAllRow.className = 'attend-row';
+      attendAllRow.style.display = 'none';
+      attendAllRow.id = 'attendAllRow';
+      const attendAllBox = document.createElement('div');
+      attendAllBox.className = 'custom-check-box small';
+      attendAllBox.id = 'attendAllBox';
+      const attendAllLabel = document.createElement('span');
+      attendAllLabel.textContent = 'ATTENDING ALL';
+
       const kidsRow = document.createElement('div');
       kidsRow.className = 'attend-row';
       kidsRow.style.display = 'none';
@@ -2247,9 +2350,12 @@
 
       attendRow.appendChild(attendBox);
       attendRow.appendChild(attendLabel);
+      attendAllRow.appendChild(attendAllBox);
+      attendAllRow.appendChild(attendAllLabel);
       kidsRow.appendChild(kidsBox);
       kidsRow.appendChild(kidsLabel);
       attendSection.appendChild(attendRow);
+      attendSection.appendChild(attendAllRow);
       attendSection.appendChild(kidsRow);
       detail.appendChild(attendSection);
 
@@ -2258,7 +2364,7 @@
       guestListWrap.id = 'guestList';
       detail.appendChild(guestListWrap);
 
-      loadAttendance(ev.id, attendBox, kidsBox, kidsRow, guestListWrap);
+      loadAttendance(ev.id, attendBox, kidsBox, kidsRow, attendAllBox, attendAllRow, isRecurring, guestListWrap);
 
       attendRow.addEventListener('click', () => {
         const isChecked = !attendBox.classList.contains('checked');
@@ -2268,20 +2374,30 @@
           kidsBox.classList.remove('checked');
           kidsBox.textContent = '';
           kidsRow.style.display = 'none';
-        } else if (CHILDREN[currentUser]) {
-          kidsRow.style.display = 'flex';
+          attendAllBox.classList.remove('checked');
+          attendAllBox.textContent = '';
+          attendAllRow.style.display = 'none';
+        } else {
+          if (CHILDREN[currentUser]) kidsRow.style.display = 'flex';
+          if (isRecurring) attendAllRow.style.display = 'flex';
         }
-        updateAttendance(ev.id, isChecked, kidsBox.classList.contains('checked'), guestListWrap);
+        updateAttendance(ev.id, isChecked, kidsBox.classList.contains('checked'), attendAllBox.classList.contains('checked'), guestListWrap);
+      });
+
+      attendAllRow.addEventListener('click', () => {
+        attendAllBox.classList.toggle('checked');
+        attendAllBox.textContent = attendAllBox.classList.contains('checked') ? 'X' : '';
+        updateAttendance(ev.id, true, kidsBox.classList.contains('checked'), attendAllBox.classList.contains('checked'), guestListWrap);
       });
 
       kidsRow.addEventListener('click', () => {
         kidsBox.classList.toggle('checked');
         kidsBox.textContent = kidsBox.classList.contains('checked') ? 'X' : '';
-        updateAttendance(ev.id, true, kidsBox.classList.contains('checked'), guestListWrap);
+        updateAttendance(ev.id, true, kidsBox.classList.contains('checked'), attendAllBox.classList.contains('checked'), guestListWrap);
       });
     }
 
-    async function loadAttendance(eventId, attendBox, kidsBox, kidsRow, guestListWrap) {
+    async function loadAttendance(eventId, attendBox, kidsBox, kidsRow, attendAllBox, attendAllRow, isRecurring, guestListWrap) {
       try {
         const res = await fetch('/api/attendance?eventId=' + encodeURIComponent(eventId));
         const data = await res.json();
@@ -2295,6 +2411,13 @@
             if (me.withKids) {
               kidsBox.classList.add('checked');
               kidsBox.textContent = 'X';
+            }
+          }
+          if (isRecurring) {
+            attendAllRow.style.display = 'flex';
+            if (me.attendAll) {
+              attendAllBox.classList.add('checked');
+              attendAllBox.textContent = 'X';
             }
           }
         }
@@ -2313,7 +2436,7 @@
       for (const a of attendees) {
         const item = document.createElement('div');
         item.className = 'guest-item';
-        item.textContent = a.name;
+        item.innerHTML = escapeHtml(a.name) + (a.attendAll ? '<span class="guest-kids">ALL</span>' : '');
         wrap.appendChild(item);
         if (a.withKids && CHILDREN[a.name]) {
           for (const kid of CHILDREN[a.name]) {
@@ -2328,12 +2451,12 @@
       }
     }
 
-    async function updateAttendance(eventId, attending, withKids, guestListWrap) {
+    async function updateAttendance(eventId, attending, withKids, attendAll, guestListWrap) {
       try {
         const res = await fetch('/api/attend', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ eventId, username: currentUser, attending, withKids })
+          body: JSON.stringify({ eventId, username: currentUser, attending, withKids, attendAll })
         });
         const data = await res.json();
         if (data.attendees) renderGuestList(data.attendees, guestListWrap);
@@ -2436,6 +2559,88 @@
       }
     }
 
+    function addChildField() {
+      const list = document.getElementById('uChildrenList');
+      const row = document.createElement('div');
+      row.className = 'child-row';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'CHILD NAME';
+      input.className = 'child-name-input';
+      const remove = document.createElement('div');
+      remove.className = 'child-remove';
+      remove.textContent = 'X';
+      remove.addEventListener('click', () => row.remove());
+      row.appendChild(input);
+      row.appendChild(remove);
+      list.appendChild(row);
+    }
+
+    async function submitUser() {
+      const btn = document.getElementById('userSubmitBtn');
+      const msg = document.getElementById('userSubmitMsg');
+      const name = document.getElementById('uName').value.trim();
+
+      if (!name) {
+        msg.textContent = 'NAME IS REQUIRED';
+        return;
+      }
+
+      const upperName = name.toUpperCase();
+      if (USERS.includes(upperName)) {
+        msg.textContent = 'USER ALREADY EXISTS';
+        return;
+      }
+
+      const childInputs = document.querySelectorAll('.child-name-input');
+      const children = [];
+      for (const input of childInputs) {
+        const val = input.value.trim();
+        if (val) children.push(val);
+      }
+
+      const notifyEmail = document.getElementById('uNotifyEmail').classList.contains('checked');
+      const email = document.getElementById('uEmail').value.trim();
+
+      if (notifyEmail && !email) {
+        msg.textContent = 'EMAIL IS REQUIRED WHEN NOTIFY IS CHECKED';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'SUBMITTING...';
+      msg.textContent = '';
+
+      try {
+        const res = await fetch('/api/submit-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: upperName, children, notifyEmail, email })
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed');
+        }
+        USERS.push(upperName);
+        if (children.length > 0) {
+          CHILDREN[upperName] = children.map(c => c.toUpperCase());
+        }
+        document.getElementById('uName').value = '';
+        document.getElementById('uChildrenList').innerHTML = '';
+        document.getElementById('uNotifyEmail').classList.remove('checked');
+        document.getElementById('uNotifyEmail').textContent = '';
+        document.getElementById('uEmailRow').style.display = 'none';
+        document.getElementById('uEmail').value = '';
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT';
+        document.getElementById('submitModal').classList.add('active');
+      } catch (e) {
+        msg.textContent = e.message === 'User already exists' ? 'USER ALREADY EXISTS' : 'SUBMISSION FAILED. TRY AGAIN.';
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT';
+      }
+    }
+
     async function loadNotifications() {
       try {
         const res = await fetch('/api/notifications?username=' + encodeURIComponent(currentUser));
@@ -2485,7 +2690,7 @@
     }
 
     function navigate(mode) {
-      const paths = { faq: '/faq', table: '/vendors', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', news: '/news', events: '/events', notifications: '/notifications' };
+      const paths = { faq: '/faq', table: '/vendors', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', 'submit-user': '/submit-user', news: '/news', events: '/events', notifications: '/notifications' };
       history.pushState(null, '', paths[mode] || '/');
       switchMode(mode);
     }
@@ -2510,12 +2715,14 @@
       else if (p === '/submit') switchMode('submit');
       else if (p === '/submit-news') switchMode('submit-news');
       else if (p === '/submit-event') switchMode('submit-event');
+      else if (p === '/submit-user') switchMode('submit-user');
       else if (p === '/news') switchMode('news');
       else if (p === '/events') switchMode('events');
       else if (p === '/notifications') switchMode('notifications');
       else switchMode('faq');
     });
 
+    loadDynamicUsers().then(() => {
     initLogin();
     if (currentUser) {
       showSite();
@@ -2527,12 +2734,14 @@
         else if (p === '/submit') switchMode('submit');
         else if (p === '/submit-news') switchMode('submit-news');
         else if (p === '/submit-event') switchMode('submit-event');
+        else if (p === '/submit-user') switchMode('submit-user');
         else if (p === '/news') switchMode('news');
         else if (p === '/events') switchMode('events');
         else if (p === '/notifications') switchMode('notifications');
         else switchMode('faq');
       });
     }
+    });
   </script>
 </body>
 </html>

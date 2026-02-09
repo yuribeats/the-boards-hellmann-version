@@ -1,7 +1,5 @@
-import { sendNotifications } from './lib/notify.js';
-
 const REPO = 'yuribeats/the-boards-hellmann-version';
-const FILE_PATH = 'data/votes.json';
+const FILE_PATH = 'data/users.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -16,10 +14,10 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { newsId, username, optionIndex } = req.body;
-    if (!newsId || !username || optionIndex === undefined) return res.status(400).json({ error: 'newsId, username, and optionIndex are required' });
+    const { name, children, notifyEmail, email } = req.body;
+    if (!name) return res.status(400).json({ error: 'Name is required' });
 
-    let votes = {};
+    let users = [];
     let sha = null;
     try {
       const resp = await fetch(
@@ -28,24 +26,29 @@ export default async function handler(req, res) {
       );
       if (resp.ok) {
         const data = await resp.json();
-        votes = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+        users = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
         sha = data.sha;
       }
     } catch {}
 
-    if (!votes[newsId]) votes[newsId] = {};
-
-    for (const key of Object.keys(votes[newsId])) {
-      votes[newsId][key] = votes[newsId][key].filter(n => n !== username);
+    const upperName = name.toUpperCase();
+    if (users.some(u => u.name === upperName)) {
+      return res.status(400).json({ error: 'User already exists' });
     }
 
-    const idx = String(optionIndex);
-    if (!votes[newsId][idx]) votes[newsId][idx] = [];
-    votes[newsId][idx].push(username);
+    const entry = { name: upperName };
+    if (children && children.length > 0) {
+      entry.children = children.map(c => c.toUpperCase());
+    }
+    if (notifyEmail && email) {
+      entry.email = email;
+    }
+
+    users.push(entry);
 
     const putBody = {
-      message: 'Vote on news ' + newsId,
-      content: Buffer.from(JSON.stringify(votes, null, 2)).toString('base64'),
+      message: 'Add user: ' + upperName,
+      content: Buffer.from(JSON.stringify(users, null, 2)).toString('base64'),
       branch: BRANCH
     };
     if (sha) putBody.sha = sha;
@@ -58,11 +61,9 @@ export default async function handler(req, res) {
         body: JSON.stringify(putBody)
       }
     );
-    if (!resp.ok) throw new Error('Failed to write votes.json');
+    if (!resp.ok) throw new Error('Failed to write users.json');
 
-    sendNotifications({ type: 'responses', actor: username, title: username + ' voted', body: 'Poll ' + newsId, token }).catch(() => {});
-
-    return res.status(200).json({ success: true, votes: votes[newsId] });
+    return res.status(200).json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
