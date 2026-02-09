@@ -89,12 +89,11 @@
     td:nth-child(3), th:nth-child(3),
     td:nth-child(4), th:nth-child(4),
     td:nth-child(5), th:nth-child(5),
-    td:nth-child(6), th:nth-child(6),
-    td:nth-child(7), th:nth-child(7) {
+    td:nth-child(6), th:nth-child(6) {
       width: 1%;
       white-space: nowrap;
     }
-    td:nth-child(8), th:nth-child(8) {
+    td:nth-child(7), th:nth-child(7) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -896,7 +895,7 @@
       .table-wrapper { margin: 0 -12px; }
       table { width: calc(100% + 24px); }
       table { font-size: 11px; }
-      th, td { padding: 8px 4px; }
+      th, td { padding: 8px 6px; }
       .profile { margin: 0 -12px; padding: 0 12px; }
       .profile-field { margin: 0 -12px; padding-left: 12px; }
       .menu-overlay { top: 44px; left: 12px; }
@@ -1282,7 +1281,7 @@
     let sortAsc = false;
     let showStarred = false;
     let serviceFilter = null;
-    const VISIBLE_COLS = ['service', 'name', 'phone', 'author', 'date uploaded', 'site', 'description'];
+    const VISIBLE_COLS = ['service', 'name', 'phone', 'author', 'date uploaded', 'site'];
     const PROFILE_COLS = ['name', 'service', 'author', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
     const COL_DISPLAY = { 'service': 'SERVICE', 'date uploaded': 'ADDED', 'author': 'BY' };
 
