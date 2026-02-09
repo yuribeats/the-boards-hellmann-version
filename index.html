@@ -790,7 +790,7 @@
     <label>SHORT NAME</label>
     <input type="text" id="eShortName" placeholder="SHOWN ON CALENDAR">
     <label>DATE</label>
-    <input type="text" id="eDate" placeholder="MM/DD">
+    <input type="text" id="eDate" placeholder="MM/DD/YYYY">
     <label>LOCATION</label>
     <input type="text" id="eLocation" placeholder="EVENT LOCATION">
     <label>CONTACT</label>
@@ -1675,7 +1675,7 @@
 
     function calendarNext() {
       const now = new Date();
-      const maxKey = calMonthKey(now.getFullYear(), now.getMonth()) + 2;
+      const maxKey = calMonthKey(now.getFullYear(), now.getMonth()) + 6;
       let nextM = calendarMonth + 1, nextY = calendarYear;
       if (nextM > 11) { nextM = 0; nextY++; }
       if (calMonthKey(nextY, nextM) > maxKey) return;
@@ -1731,7 +1731,7 @@
 
       const now = new Date();
       const minKey = calMonthKey(now.getFullYear(), now.getMonth()) - 2;
-      const maxKey = calMonthKey(now.getFullYear(), now.getMonth()) + 2;
+      const maxKey = calMonthKey(now.getFullYear(), now.getMonth()) + 6;
       const curKey = calMonthKey(calendarYear, calendarMonth);
       document.querySelector('.calendar-nav-btn').style.opacity = curKey <= minKey ? '0.3' : '';
       document.querySelectorAll('.calendar-nav-btn')[1].style.opacity = curKey >= maxKey ? '0.3' : '';
@@ -1995,19 +1995,20 @@
       }
 
       const dateParts = date.split('/');
-      if (dateParts.length !== 2 || !parseInt(dateParts[0]) || !parseInt(dateParts[1])) {
-        msg.textContent = 'DATE MUST BE MM/DD';
+      if ((dateParts.length !== 2 && dateParts.length !== 3) || !parseInt(dateParts[0]) || !parseInt(dateParts[1])) {
+        msg.textContent = 'DATE MUST BE MM/DD OR MM/DD/YYYY';
         return;
       }
       const now = new Date();
       const eMonth = parseInt(dateParts[0]) - 1;
       const eDay = parseInt(dateParts[1]);
-      let eYear = now.getFullYear();
-      if (eMonth < now.getMonth()) eYear++;
+      let eYear = dateParts.length === 3 && parseInt(dateParts[2]) ? parseInt(dateParts[2]) : now.getFullYear();
+      if (eYear < 100) eYear += 2000;
+      if (dateParts.length < 3 && eMonth < now.getMonth()) eYear++;
       const eventDate = new Date(eYear, eMonth, eDay);
-      const maxDate = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+      const maxDate = new Date(now.getFullYear(), now.getMonth() + 7, 0);
       if (eventDate > maxDate) {
-        msg.textContent = 'EVENTS CAN ONLY BE ADDED UP TO TWO MONTHS IN THE FUTURE';
+        msg.textContent = 'EVENTS CAN ONLY BE ADDED UP TO SIX MONTHS IN THE FUTURE';
         return;
       }
 
