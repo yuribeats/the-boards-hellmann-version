@@ -827,9 +827,9 @@
             for (const p of posts) {
               const div = document.createElement('div');
               div.className = 'news-post';
-              div.innerHTML = (p.title ? '<div class="news-post-title">' + escapeHtml(p.title) + '</div>' : '') +
+              div.innerHTML = (p.title ? '<div class="news-post-title">' + parseLinks(p.title) + '</div>' : '') +
                 '<div class="news-post-date">' + escapeHtml(p.date) + '</div>' +
-                '<div class="news-post-body">' + escapeHtml(p.body) + '</div>';
+                '<div class="news-post-body">' + parseLinks(p.body) + '</div>';
               feed.appendChild(div);
             }
           }
@@ -1073,6 +1073,15 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+
+    function parseLinks(str) {
+      const escaped = escapeHtml(str);
+      return escaped.replace(/\(([^)]+)\)\(link:([^)]+)\)/g, function(m, text, url) {
+        let href = url;
+        if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+        return '<a href="' + escapeHtml(href) + '" target="_blank" style="color:#000;font-weight:900">' + text + '</a>';
+      });
     }
 
     function navigate(mode) {
