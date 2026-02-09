@@ -218,7 +218,11 @@
       width: 100%;
     }
     .submit-form input::placeholder { color: #999; }
-    .submit-form select {
+    .custom-select {
+      position: relative;
+      width: 100%;
+    }
+    .custom-select-trigger {
       font-family: Arial, Helvetica, sans-serif;
       font-weight: 900;
       text-transform: uppercase;
@@ -228,11 +232,31 @@
       width: 100%;
       background: #fff;
       color: #000;
-      appearance: none;
-      -webkit-appearance: none;
-      border-radius: 0;
       cursor: pointer;
     }
+    .custom-select-options {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      border: 2px solid #000;
+      border-top: none;
+      background: #fff;
+      z-index: 60;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .custom-select.open .custom-select-options { display: block; }
+    .custom-select-option {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+    .custom-select-option:hover { background: #E3E1DB; }
     .submit-form textarea {
       font-family: Arial, Helvetica, sans-serif;
       font-weight: 900;
@@ -408,8 +432,11 @@
   <div class="image-feed" id="imageFeed"></div>
   <div class="submit-form" id="submitForm">
     <label>SERVICE TYPE</label>
-    <select id="fServiceSelect" onchange="toggleNewService()"></select>
-    <input type="text" id="fServiceNew" placeholder="ENTER NEW SERVICE TYPE" style="display:none;margin-top:8px">
+    <div class="custom-select" id="fServiceSelect">
+      <div class="custom-select-trigger" onclick="document.getElementById('fServiceSelect').classList.toggle('open')">NEW SERVICE</div>
+      <div class="custom-select-options" id="fServiceOptions"></div>
+    </div>
+    <input type="text" id="fServiceNew" placeholder="ENTER NEW SERVICE TYPE" style="margin-top:8px">
     <label>NAME</label>
     <input type="text" id="fName" placeholder="NAME">
     <label>SITE</label>
@@ -562,6 +589,10 @@
       const burger = document.getElementById('burger');
       if (menu.classList.contains('open') && !menu.contains(e.target) && !burger.contains(e.target)) {
         menu.classList.remove('open');
+      }
+      const cs = document.getElementById('fServiceSelect');
+      if (cs && cs.classList.contains('open') && !cs.contains(e.target)) {
+        cs.classList.remove('open');
       }
     });
 
@@ -799,13 +830,11 @@
       });
     }
 
+    let selectedService = '';
+
     async function populateServiceDropdown() {
-      const sel = document.getElementById('fServiceSelect');
-      sel.innerHTML = '';
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'NEW SERVICE';
-      sel.appendChild(opt);
+      const opts = document.getElementById('fServiceOptions');
+      opts.innerHTML = '';
       let data = rows;
       if (!data.length) {
         try {
@@ -814,21 +843,24 @@
           data = json.rows || [];
         } catch {}
       }
-      const services = [...new Set(data.map(r => (r.service || '').trim()).filter(Boolean))].sort();
-      for (const s of services) {
-        const o = document.createElement('option');
-        o.value = s;
-        o.textContent = s;
-        sel.appendChild(o);
+      const items = ['NEW SERVICE', ...new Set(data.map(r => (r.service || '').trim()).filter(Boolean))].sort((a, b) => a === 'NEW SERVICE' ? -1 : b === 'NEW SERVICE' ? 1 : a.localeCompare(b));
+      for (const s of items) {
+        const div = document.createElement('div');
+        div.className = 'custom-select-option';
+        div.textContent = s;
+        div.addEventListener('click', () => selectService(s === 'NEW SERVICE' ? '' : s));
+        opts.appendChild(div);
       }
-      sel.value = '';
-      toggleNewService();
+      selectService('');
     }
 
-    function toggleNewService() {
-      const sel = document.getElementById('fServiceSelect');
+    function selectService(val) {
+      selectedService = val;
+      const trigger = document.querySelector('.custom-select-trigger');
+      trigger.textContent = val || 'NEW SERVICE';
+      document.getElementById('fServiceSelect').classList.remove('open');
       const input = document.getElementById('fServiceNew');
-      if (sel.value === '') {
+      if (val === '') {
         input.style.display = '';
         input.focus();
       } else {
@@ -840,8 +872,7 @@
     async function submitListing() {
       const btn = document.getElementById('submitBtn');
       const msg = document.getElementById('submitMsg');
-      const selVal = document.getElementById('fServiceSelect').value;
-      const service = (selVal || document.getElementById('fServiceNew').value).trim();
+      const service = (selectedService || document.getElementById('fServiceNew').value).trim();
       const name = document.getElementById('fName').value.trim();
 
       if (!service || !name) {
@@ -878,9 +909,7 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
-        document.getElementById('fServiceSelect').value = '';
-        document.getElementById('fServiceNew').value = '';
-        toggleNewService();
+        selectService('');
         document.getElementById('fName').value = '';
         document.getElementById('fSite').value = '';
         document.getElementById('fPhone').value = '';
