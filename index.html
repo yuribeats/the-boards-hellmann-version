@@ -1284,7 +1284,7 @@
     let serviceFilter = null;
     const VISIBLE_COLS = ['service', 'name', 'phone', 'author', 'date uploaded', 'site', 'description'];
     const PROFILE_COLS = ['name', 'service', 'author', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
-    const COL_DISPLAY = { 'service': 'SERVICE TYPE', 'date uploaded': 'ADDED', 'author': 'ADDED BY' };
+    const COL_DISPLAY = { 'service': 'SERVICE', 'date uploaded': 'ADDED', 'author': 'ADDED BY' };
 
     function getStarred() {
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
