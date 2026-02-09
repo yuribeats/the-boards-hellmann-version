@@ -237,7 +237,6 @@
       max-width: 500px;
       display: block;
       margin: 0 auto 0;
-      border-bottom: 2px solid #000;
       padding: 24px 0;
     }
     .submit-btn {
@@ -327,7 +326,6 @@
     .profile-back:hover { opacity: 0.5; }
     .profile-field {
       padding: 12px 0;
-      border-bottom: 2px solid #000;
       margin: 0 -24px;
       padding-left: 24px;
     }
@@ -586,7 +584,19 @@
         tr.appendChild(starTd);
         VISIBLE_COLS.forEach(col => {
           const td = document.createElement('td');
-          td.textContent = row[col] || '';
+          if (col === 'site' && row[col]) {
+            const a = document.createElement('a');
+            let href = row[col];
+            if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+            a.href = href;
+            a.textContent = row[col];
+            a.target = '_blank';
+            a.style.color = '#000';
+            a.style.fontWeight = '900';
+            td.appendChild(a);
+          } else {
+            td.textContent = row[col] || '';
+          }
           if (col === 'name') {
             td.className = 'name-link';
             td.addEventListener('click', () => showProfile(row));
@@ -606,7 +616,7 @@
 
       const back = document.createElement('div');
       back.className = 'profile-back';
-      back.textContent = '\u2190 BACK';
+      back.innerHTML = '<span style="display:inline-block;transform:translateY(-1px)">\u2190</span> BACK';
       back.addEventListener('click', () => {
         profile.classList.remove('active');
         profile.innerHTML = '';
@@ -628,7 +638,13 @@
         if (!val) return;
         const field = document.createElement('div');
         field.className = 'profile-field';
-        field.innerHTML = '<div class="profile-label">' + (COL_DISPLAY[col] || col.toUpperCase()) + '</div><div class="profile-value">' + val + '</div>';
+        let displayVal = val;
+        if (col === 'site') {
+          let href = val;
+          if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+          displayVal = '<a href="' + href + '" target="_blank" style="color:#000;font-weight:900">' + val + '</a>';
+        }
+        field.innerHTML = '<div class="profile-label">' + (COL_DISPLAY[col] || col.toUpperCase()) + '</div><div class="profile-value">' + displayVal + '</div>';
         profile.appendChild(field);
       });
     }

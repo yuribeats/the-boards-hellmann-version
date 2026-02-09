@@ -87,7 +87,7 @@
   </div>
 
   <div id="adminView" style="display:none">
-    <a href="/" class="back-link">&larr; BACK TO SITE</a>
+    <a href="/" class="back-link"><span style="display:inline-block;transform:translateY(-1px)">&larr;</span> BACK TO SITE</a>
     <h1>PENDING SUBMISSIONS</h1>
     <hr class="separator">
     <div id="pendingList"></div>
@@ -149,7 +149,13 @@
           }
           for (const f of FIELDS) {
             if (item[f]) {
-              html += '<div class="card-field"><span class="card-label">' + (FIELD_DISPLAY[f] || f.toUpperCase()) + ': </span>' + escapeHtml(item[f]) + '</div>';
+              let val = escapeHtml(item[f]);
+              if (f === 'site') {
+                let href = item[f];
+                if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+                val = '<a href="' + escapeHtml(href) + '" target="_blank" style="color:#000;font-weight:900">' + val + '</a>';
+              }
+              html += '<div class="card-field"><span class="card-label">' + (FIELD_DISPLAY[f] || f.toUpperCase()) + ': </span>' + val + '</div>';
             }
           }
           html += '<div class="card-actions">';
