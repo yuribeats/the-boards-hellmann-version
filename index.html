@@ -684,7 +684,7 @@
     <label>SHORT NAME</label>
     <input type="text" id="eShortName" placeholder="SHOWN ON CALENDAR">
     <label>DATE</label>
-    <input type="text" id="eDate" placeholder="MM/DD/YYYY">
+    <input type="text" id="eDate" placeholder="MM/DD">
     <label>LOCATION</label>
     <input type="text" id="eLocation" placeholder="EVENT LOCATION">
     <label>CONTACT</label>
@@ -1711,12 +1711,16 @@
       }
 
       const dateParts = date.split('/');
-      if (dateParts.length !== 3 || !parseInt(dateParts[0]) || !parseInt(dateParts[1]) || !parseInt(dateParts[2])) {
-        msg.textContent = 'DATE MUST BE MM/DD/YYYY';
+      if (dateParts.length !== 2 || !parseInt(dateParts[0]) || !parseInt(dateParts[1])) {
+        msg.textContent = 'DATE MUST BE MM/DD';
         return;
       }
-      const eventDate = new Date(parseInt(dateParts[2]), parseInt(dateParts[0]) - 1, parseInt(dateParts[1]));
       const now = new Date();
+      const eMonth = parseInt(dateParts[0]) - 1;
+      const eDay = parseInt(dateParts[1]);
+      let eYear = now.getFullYear();
+      if (eMonth < now.getMonth()) eYear++;
+      const eventDate = new Date(eYear, eMonth, eDay);
       const maxDate = new Date(now.getFullYear(), now.getMonth() + 3, 0);
       if (eventDate > maxDate) {
         msg.textContent = 'EVENTS CAN ONLY BE ADDED UP TO TWO MONTHS IN THE FUTURE';
@@ -1736,7 +1740,7 @@
         const payload = {
           event: eventName,
           shortName: document.getElementById('eShortName').value.trim(),
-          date,
+          date: parseInt(dateParts[0]) + '/' + parseInt(dateParts[1]) + '/' + eYear,
           location: document.getElementById('eLocation').value.trim(),
           contact: document.getElementById('eContact').value.trim(),
           site: document.getElementById('eSite').value.trim(),
