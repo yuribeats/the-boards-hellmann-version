@@ -44,6 +44,7 @@ export default async function handler(req, res) {
       rows.push(row);
     }
 
+    if (!columns.includes('author')) columns.push('author');
     const approved = await loadApproved();
     for (const item of approved) {
       const row = {};

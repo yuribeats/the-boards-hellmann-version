@@ -1479,6 +1479,10 @@
         mapBtn.target = '_blank';
         mapBtn.textContent = 'VIEW ON MAP';
         profile.appendChild(mapBtn);
+        const mapNote = document.createElement('div');
+        mapNote.style.cssText = 'text-align:center;font-size:11px;font-weight:900;opacity:0.5;margin-top:6px';
+        mapNote.textContent = '(WRONG SOMETIMES)';
+        profile.appendChild(mapNote);
       }
     }
 
