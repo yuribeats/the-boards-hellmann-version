@@ -656,6 +656,14 @@
       .calendar-wrap { margin: 0 -12px; padding: 16px 12px; }
       .calendar-cell { min-height: 60px; }
       .calendar-event { font-size: 9px; }
+      .login-screen { padding: 24px 12px; min-height: 40vh; }
+      .faq-wrap { padding: 16px 0; }
+      .faq-q { font-size: 13px; }
+      .faq-a { font-size: 11px; }
+      .submit-form { padding: 16px 0; }
+      .event-detail { padding: 16px 0; }
+      .attend-row { font-size: 13px; }
+      .guest-item { font-size: 12px; }
     }
   </style>
 </head>
@@ -1066,8 +1074,14 @@
         return;
       }
       const rect = anchor.getBoundingClientRect();
-      sm.style.left = (rect.right + 2) + 'px';
-      sm.style.top = rect.top + 'px';
+      const leftPos = rect.right + 2;
+      if (leftPos + 100 > window.innerWidth) {
+        sm.style.left = rect.left + 'px';
+        sm.style.top = (rect.bottom + 2) + 'px';
+      } else {
+        sm.style.left = leftPos + 'px';
+        sm.style.top = rect.top + 'px';
+      }
       sm.classList.add('open');
     }
 
