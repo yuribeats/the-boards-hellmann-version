@@ -1550,6 +1550,8 @@
         history.pushState(null, '', '/profile/' + slugify(row.name));
       }
 
+      const topRow = document.createElement('div');
+      topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
       const back = document.createElement('div');
       back.className = 'profile-back';
       back.innerHTML = '<span style="display:inline-block;transform:translateY(-1px)">\u2190</span> BACK';
@@ -1558,9 +1560,20 @@
         profile.innerHTML = '';
         document.getElementById('tableWrapper').style.display = '';
         document.querySelector('.separator').style.display = '';
-        history.pushState(null, '', '/');
+        document.getElementById('modeLabel').innerHTML = 'VENDORS / <span class="gcal-link" onclick="navigate(\'submit\')">SUBMIT</span>';
+        document.getElementById('modeLabel').style.display = '';
+        document.getElementById('separator2').style.display = '';
+        history.pushState(null, '', '/vendors');
       });
-      profile.appendChild(back);
+      topRow.appendChild(back);
+      const editBtn = document.createElement('span');
+      editBtn.style.cssText = 'font-size:12px;font-weight:900;cursor:default;border:2px solid #000;padding:4px 10px';
+      editBtn.textContent = 'EDIT';
+      editBtn.addEventListener('click', () => editVendor(row));
+      editBtn.addEventListener('mouseenter', () => { editBtn.style.background = '#000'; editBtn.style.color = '#fff'; });
+      editBtn.addEventListener('mouseleave', () => { editBtn.style.background = ''; editBtn.style.color = ''; });
+      topRow.appendChild(editBtn);
+      profile.appendChild(topRow);
 
       if (row.image) {
         const img = document.createElement('img');
@@ -1600,6 +1613,96 @@
         mapNote.textContent = '(WRONG SOMETIMES)';
         profile.appendChild(mapNote);
       }
+    }
+
+    function editVendor(row) {
+      var profile = document.getElementById('profile');
+      profile.innerHTML = '';
+
+      var topRow = document.createElement('div');
+      topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
+      var cancel = document.createElement('div');
+      cancel.className = 'profile-back';
+      cancel.textContent = 'CANCEL';
+      cancel.addEventListener('click', function() { showProfile(row, true); });
+      topRow.appendChild(cancel);
+      profile.appendChild(topRow);
+
+      var editableCols = [
+        { key: 'name', label: 'NAME' },
+        { key: 'service', label: 'SERVICE TYPE' },
+        { key: 'phone', label: 'PHONE' },
+        { key: 'email', label: 'EMAIL' },
+        { key: 'site', label: 'SITE' },
+        { key: 'neighborhood', label: 'NEIGHBORHOOD' },
+        { key: 'description', label: 'DESCRIPTION', textarea: true }
+      ];
+
+      var inputs = {};
+      for (var i = 0; i < editableCols.length; i++) {
+        var c = editableCols[i];
+        var lbl = document.createElement('label');
+        lbl.style.cssText = 'display:block;font-size:11px;opacity:0.5;margin-bottom:4px;margin-top:16px';
+        lbl.textContent = c.label;
+        profile.appendChild(lbl);
+        if (c.textarea) {
+          var ta = document.createElement('textarea');
+          ta.value = row[c.key] || '';
+          ta.placeholder = c.label;
+          ta.style.cssText = 'font-family:Arial,Helvetica,sans-serif;font-weight:900;text-transform:uppercase;font-size:14px;padding:10px 12px;border:2px solid #000;width:100%;resize:vertical;min-height:80px';
+          profile.appendChild(ta);
+          inputs[c.key] = ta;
+        } else {
+          var inp = document.createElement('input');
+          inp.type = 'text';
+          inp.value = row[c.key] || '';
+          inp.placeholder = c.label;
+          inp.style.cssText = 'font-family:Arial,Helvetica,sans-serif;font-weight:900;text-transform:uppercase;font-size:14px;padding:10px 12px;border:2px solid #000;width:100%';
+          profile.appendChild(inp);
+          inputs[c.key] = inp;
+        }
+      }
+
+      var saveBtn = document.createElement('button');
+      saveBtn.className = 'submit-btn';
+      saveBtn.textContent = 'SAVE';
+      saveBtn.style.marginTop = '24px';
+      profile.appendChild(saveBtn);
+
+      var msgDiv = document.createElement('div');
+      msgDiv.className = 'submit-msg';
+      profile.appendChild(msgDiv);
+
+      saveBtn.addEventListener('click', async function() {
+        if (!inputs.name.value.trim() || !inputs.service.value.trim()) {
+          msgDiv.textContent = 'NAME AND SERVICE TYPE ARE REQUIRED';
+          return;
+        }
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'SAVING...';
+        msgDiv.textContent = '';
+        try {
+          var payload = { id: row.id || '' };
+          for (var k in inputs) {
+            payload[k] = inputs[k].value.trim();
+          }
+          var res = await fetch('/api/edit-vendor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('Failed');
+          var data = await res.json();
+          var updated = data.vendor || Object.assign({}, row, payload);
+          var idx = rows.findIndex(function(r) { return rowKey(r) === rowKey(row); });
+          if (idx >= 0) rows[idx] = updated;
+          showProfile(updated, true);
+        } catch (e) {
+          msgDiv.textContent = 'SAVE FAILED. TRY AGAIN.';
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'SAVE';
+        }
+      });
     }
 
     function toggleMenu() {
