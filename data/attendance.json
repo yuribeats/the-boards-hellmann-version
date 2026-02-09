@@ -5,5 +5,11 @@
       "withKids": true
     }
   ],
-  "1770649892929": []
+  "1770649892929": [
+    {
+      "name": "YURI RYBAK",
+      "withKids": false,
+      "attendAll": false
+    }
+  ]
 }
