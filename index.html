@@ -1461,15 +1461,18 @@
           let html = '<div class="news-post-title">' + escapeHtml(ev.event || '') + '</div>';
           html += '<div class="news-post-date">' + escapeHtml(ev.date || '') + (ev.location ? ' &mdash; ' + escapeHtml(ev.location) : '') + '</div>';
           if (ev.contact) html += '<div class="news-post-body">' + escapeHtml(ev.contact) + '</div>';
-          const parts = (ev.date || '').split('/');
-          if (parts.length === 3) {
-            const m = parseInt(parts[0]);
-            const y = parseInt(parts[2]);
-            html += '<a class="news-post-calendar-link" href="/events?m=' + m + '&y=' + y + '" onclick="event.preventDefault();goToEventMonth(' + m + ',' + y + ')">VIEW ON CALENDAR</a>';
-          }
           const inner = document.createElement('div');
           inner.innerHTML = html;
           while (inner.firstChild) card.appendChild(inner.firstChild);
+          const viewLink = document.createElement('a');
+          viewLink.className = 'news-post-calendar-link';
+          viewLink.href = 'javascript:void(0)';
+          viewLink.textContent = 'VIEW EVENT PROFILE';
+          viewLink.addEventListener('click', () => {
+            switchMode('events');
+            setTimeout(() => showEventDetail(ev), 100);
+          });
+          card.appendChild(viewLink);
           wrap.appendChild(card);
         }
       } catch {}
