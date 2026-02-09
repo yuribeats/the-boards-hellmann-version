@@ -2441,33 +2441,17 @@
         }
       }
 
-      if (ev.repeatYearly && !isOrigMonth) {
-        var viewKey = viewYear * 12 + viewMonth;
-        var origKey = eYear * 12 + eMonth;
-        if (viewKey > origKey && viewMonth === eMonth) {
-          if (endDate) {
-            var span = Math.round((endDate - origDate) / 86400000);
-            var yearlyStart = new Date(viewYear, eMonth, eDay);
-            var yearlyEnd = new Date(yearlyStart);
-            yearlyEnd.setDate(yearlyEnd.getDate() + span);
-            addMultiDayRange(yearlyStart, yearlyEnd);
-          } else {
-            var dayInMonth = Math.min(eDay, daysInView);
-            if (days.indexOf(dayInMonth) === -1) days.push(dayInMonth);
-          }
-        }
-        if (endDate) {
-          var span = Math.round((endDate - origDate) / 86400000);
-          var yearlyStart = new Date(viewYear, eMonth, eDay);
-          var yearlyEnd = new Date(yearlyStart);
-          yearlyEnd.setDate(yearlyEnd.getDate() + span);
-          if (yearlyEnd.getMonth() !== eMonth || yearlyEnd.getFullYear() !== viewYear) {
-            var viewKey2 = viewYear * 12 + viewMonth;
-            var endKey = yearlyEnd.getFullYear() * 12 + yearlyEnd.getMonth();
-            if (viewKey2 > origKey && viewKey2 >= viewYear * 12 + eMonth && viewKey2 <= endKey) {
-              addMultiDayRange(yearlyStart, yearlyEnd);
-            }
-          }
+      if (ev.repeatYearly && !isOrigMonth && viewYear === eYear && viewMonth > eMonth) {
+        if (ev.repeatWeekly) {
+          var d = 1;
+          while (d <= daysInView && new Date(viewYear, viewMonth, d).getDay() !== weekday) d++;
+          while (d <= daysInView) { if (days.indexOf(d) === -1) days.push(d); d += 7; }
+        } else {
+          var nthOccurrence = Math.ceil(eDay / 7);
+          var d = 1;
+          while (d <= daysInView && new Date(viewYear, viewMonth, d).getDay() !== weekday) d++;
+          var target = d + (nthOccurrence - 1) * 7;
+          if (target <= daysInView && days.indexOf(target) === -1) days.push(target);
         }
       }
 
