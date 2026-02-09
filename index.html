@@ -1186,6 +1186,16 @@
         field.innerHTML = '<div class="profile-label">' + (COL_DISPLAY[col] || col.toUpperCase()) + '</div><div class="profile-value">' + displayVal + '</div>';
         profile.appendChild(field);
       });
+
+      if (row.name) {
+        const mapBtn = document.createElement('a');
+        mapBtn.className = 'submit-btn';
+        mapBtn.style.cssText = 'display:block;text-align:center;text-decoration:none;margin-top:24px';
+        mapBtn.href = 'https://www.google.com/maps/search/' + encodeURIComponent(row.name + ' Philadelphia');
+        mapBtn.target = '_blank';
+        mapBtn.textContent = 'VIEW ON MAP';
+        profile.appendChild(mapBtn);
+      }
     }
 
     function toggleMenu() {
