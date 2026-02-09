@@ -218,6 +218,21 @@
       width: 100%;
     }
     .submit-form input::placeholder { color: #999; }
+    .submit-form select {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+      width: 100%;
+      background: #fff;
+      color: #000;
+      appearance: none;
+      -webkit-appearance: none;
+      border-radius: 0;
+      cursor: pointer;
+    }
     .submit-form textarea {
       font-family: Arial, Helvetica, sans-serif;
       font-weight: 900;
@@ -393,7 +408,8 @@
   <div class="image-feed" id="imageFeed"></div>
   <div class="submit-form" id="submitForm">
     <label>SERVICE TYPE</label>
-    <input type="text" id="fService" placeholder="SERVICE TYPE">
+    <select id="fServiceSelect" onchange="toggleNewService()"></select>
+    <input type="text" id="fServiceNew" placeholder="ENTER NEW SERVICE TYPE" style="display:none;margin-top:8px">
     <label>NAME</label>
     <input type="text" id="fName" placeholder="NAME">
     <label>SITE</label>
@@ -701,6 +717,7 @@
         document.getElementById('submitBtn').textContent = 'SUBMIT';
         const now = new Date();
         document.getElementById('fDate').value = (now.getMonth()+1) + '/' + now.getDate() + '/' + now.getFullYear();
+        populateServiceDropdown();
         updateMenuDividers();
         return;
       }
@@ -782,10 +799,41 @@
       });
     }
 
+    function populateServiceDropdown() {
+      const sel = document.getElementById('fServiceSelect');
+      sel.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'NEW SERVICE';
+      sel.appendChild(opt);
+      const services = [...new Set(rows.map(r => (r.service || '').trim()).filter(Boolean))].sort();
+      for (const s of services) {
+        const o = document.createElement('option');
+        o.value = s;
+        o.textContent = s;
+        sel.appendChild(o);
+      }
+      sel.value = '';
+      toggleNewService();
+    }
+
+    function toggleNewService() {
+      const sel = document.getElementById('fServiceSelect');
+      const input = document.getElementById('fServiceNew');
+      if (sel.value === '') {
+        input.style.display = '';
+        input.focus();
+      } else {
+        input.style.display = 'none';
+        input.value = '';
+      }
+    }
+
     async function submitListing() {
       const btn = document.getElementById('submitBtn');
       const msg = document.getElementById('submitMsg');
-      const service = document.getElementById('fService').value.trim();
+      const selVal = document.getElementById('fServiceSelect').value;
+      const service = (selVal || document.getElementById('fServiceNew').value).trim();
       const name = document.getElementById('fName').value.trim();
 
       if (!service || !name) {
@@ -822,7 +870,9 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
-        document.getElementById('fService').value = '';
+        document.getElementById('fServiceSelect').value = '';
+        document.getElementById('fServiceNew').value = '';
+        toggleNewService();
         document.getElementById('fName').value = '';
         document.getElementById('fSite').value = '';
         document.getElementById('fPhone').value = '';
