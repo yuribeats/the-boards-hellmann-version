@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1770614514450",
+    "type": "event",
+    "event": "Hellmann Rybak Dinner",
+    "shortName": "409 Dinner",
+    "date": "3/8/2026",
+    "location": "409 Westview st.",
+    "contact": "9175142649",
+    "site": "",
+    "repeatWeekly": true,
+    "repeatMonthly": true,
+    "submitted": "2/9/2026",
+    "publishToNews": true,
+    "image": "event_1770614514450.jpeg"
+  }
+]
