@@ -870,13 +870,13 @@
     <span></span><span></span><span></span>
   </div>
   <div class="menu-overlay" id="menu">
-    <a href="/faq" id="menuFaq" onclick="event.preventDefault();navigate('faq')">FAQ</a>
+    <a href="javascript:void(0)" id="menuSubmit" onclick="event.stopPropagation();toggleSubmitMenu()">SUBMIT</a>
+    <a href="/faq" id="menuFaq" onclick="event.preventDefault();navigate('faq')" class="menu-divider">FAQ</a>
     <a href="/vendors" id="menuTable" onclick="event.preventDefault();navigate('table')" class="menu-divider">VENDORS</a>
     <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')" class="menu-divider">NEWS</a>
     <a href="/events" id="menuEvents" onclick="event.preventDefault();navigate('events')" class="menu-divider">EVENTS</a>
     <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')" class="menu-divider">&#9733;</a>
     <a href="/notifications" id="menuNotif" onclick="event.preventDefault();navigate('notifications')" class="menu-divider">NOTIFICATIONS</a>
-    <a href="javascript:void(0)" id="menuSubmit" onclick="event.stopPropagation();toggleSubmitMenu()" class="menu-divider">SUBMIT</a>
     <a href="javascript:void(0)" id="menuLogout" onclick="doLogout()" class="menu-divider">LOGOUT</a>
   </div>
   <div class="menu-overlay" id="submitMenu">
