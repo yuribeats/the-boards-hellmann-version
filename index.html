@@ -679,12 +679,11 @@
     <span></span><span></span><span></span>
   </div>
   <div class="menu-overlay" id="menu">
-    <a href="/" id="menuFaq" onclick="event.preventDefault();navigate('faq')" style="display:none">FAQ</a>
-    <a href="/vendors" id="menuTable" onclick="event.preventDefault();navigate('table')">VENDORS</a>
-    <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')">&#9733;</a>
-    <a href="/" id="menuAll" onclick="event.preventDefault();navigate('table')" style="display:none">VENDORS</a>
-    <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')">NEWS</a>
-    <a href="/events" id="menuEvents" onclick="event.preventDefault();navigate('events')">EVENTS</a>
+    <a href="/faq" id="menuFaq" onclick="event.preventDefault();navigate('faq')">FAQ</a>
+    <a href="/vendors" id="menuTable" onclick="event.preventDefault();navigate('table')" class="menu-divider">VENDORS</a>
+    <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')" class="menu-divider">NEWS</a>
+    <a href="/events" id="menuEvents" onclick="event.preventDefault();navigate('events')" class="menu-divider">EVENTS</a>
+    <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')" class="menu-divider">&#9733;</a>
     <a href="javascript:void(0)" id="menuSubmit" onclick="event.stopPropagation();toggleSubmitMenu()" class="menu-divider">SUBMIT</a>
     <a href="javascript:void(0)" id="menuLogout" onclick="doLogout()" class="menu-divider">LOGOUT</a>
   </div>
@@ -1203,20 +1202,8 @@
       });
     }
 
-    function updateMenuDividers() {
-      const links = document.querySelectorAll('.menu-overlay a');
-      let first = true;
-      links.forEach(a => {
-        a.classList.remove('menu-divider');
-        if (a.style.display === 'none') return;
-        if (first) { first = false; return; }
-        a.classList.add('menu-divider');
-      });
-    }
-
     function toggleMenu() {
       document.getElementById('menu').classList.toggle('open');
-      updateMenuDividers();
     }
 
     async function switchMode(mode) {
@@ -1225,12 +1212,6 @@
       profile.classList.remove('active');
       profile.innerHTML = '';
       document.querySelector('.separator').style.display = '';
-      document.getElementById('menuTable').style.display = (mode === 'table' && !showStarred) ? 'none' : '';
-      document.getElementById('menuStar').style.display = mode === 'starred' ? 'none' : '';
-      document.getElementById('menuAll').style.display = mode === 'starred' ? '' : 'none';
-      document.getElementById('menuNews').style.display = mode === 'news' ? 'none' : '';
-      document.getElementById('menuEvents').style.display = mode === 'events' ? 'none' : '';
-      document.getElementById('menuSubmit').style.display = '';
       document.getElementById('submitMenu').classList.remove('open');
       document.getElementById('submitForm').classList.remove('active');
       document.getElementById('newsSubmitForm').classList.remove('active');
@@ -1244,15 +1225,12 @@
       document.getElementById('eventDetail').classList.remove('active');
       document.getElementById('eventDetail').innerHTML = '';
       document.getElementById('faqWrap').classList.remove('active');
-      document.getElementById('menuFaq').style.display = (mode === 'faq') ? 'none' : '';
 
       if (mode === 'faq') {
         document.getElementById('tableWrapper').style.display = 'none';
         document.getElementById('modeLabel').style.display = 'none';
         document.getElementById('separator2').style.display = 'none';
         document.getElementById('faqWrap').classList.add('active');
-        document.getElementById('menuTable').style.display = '';
-        updateMenuDividers();
         return;
       }
 
@@ -1279,7 +1257,6 @@
         } catch {
           feed.innerHTML = '<div class="loading">FAILED TO LOAD NEWS</div>';
         }
-        updateMenuDividers();
         return;
       }
 
@@ -1295,7 +1272,6 @@
         const now = new Date();
         document.getElementById('fDate').value = (now.getMonth()+1) + '/' + now.getDate() + '/' + now.getFullYear();
         populateServiceDropdown();
-        updateMenuDividers();
         return;
       }
 
@@ -1308,7 +1284,6 @@
         document.getElementById('newsSubmitMsg').textContent = '';
         document.getElementById('newsSubmitBtn').disabled = false;
         document.getElementById('newsSubmitBtn').textContent = 'SUBMIT';
-        updateMenuDividers();
         return;
       }
 
@@ -1321,7 +1296,6 @@
         document.getElementById('eventSubmitMsg').textContent = '';
         document.getElementById('eventSubmitBtn').disabled = false;
         document.getElementById('eventSubmitBtn').textContent = 'SUBMIT';
-        updateMenuDividers();
         return;
       }
 
@@ -1337,7 +1311,6 @@
           calendarYear = parseInt(params.get('y'));
         }
         loadEvents();
-        updateMenuDividers();
         return;
       }
 
@@ -1346,8 +1319,6 @@
         document.getElementById('modeLabel').style.display = 'none';
         document.getElementById('separator2').style.display = 'none';
         document.getElementById('tableWrapper').style.display = '';
-        document.getElementById('menuTable').style.display = 'none';
-        updateMenuDividers();
         render();
         Promise.all([loadStarredNews(), loadStarredEvents()]).then(() => {
           const hasServices = document.getElementById('tableWrapper').style.display !== 'none';
@@ -1367,10 +1338,6 @@
       document.getElementById('modeLabel').style.display = 'none';
       document.getElementById('separator2').style.display = 'none';
       document.getElementById('tableWrapper').style.display = '';
-      document.getElementById('menuStar').style.display = '';
-      document.getElementById('menuAll').style.display = 'none';
-      document.getElementById('menuTable').style.display = 'none';
-      updateMenuDividers();
       render();
     }
 
@@ -2110,7 +2077,7 @@
     }
 
     function navigate(mode) {
-      const paths = { faq: '/', table: '/vendors', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', news: '/news', events: '/events' };
+      const paths = { faq: '/faq', table: '/vendors', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', news: '/news', events: '/events' };
       history.pushState(null, '', paths[mode] || '/');
       switchMode(mode);
     }
