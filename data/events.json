@@ -13,6 +13,8 @@
     "submitted": "2/9/2026",
     "image": "event_1770649892929.jpg",
     "endDate": "",
-    "repeatYearly": false
+    "repeatYearly": true,
+    "startTime": "",
+    "endTime": ""
   }
 ]
