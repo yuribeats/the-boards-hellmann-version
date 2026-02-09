@@ -1153,8 +1153,16 @@
         document.getElementById('menuTable').style.display = 'none';
         updateMenuDividers();
         render();
-        loadStarredNews();
-        loadStarredEvents();
+        Promise.all([loadStarredNews(), loadStarredEvents()]).then(() => {
+          const hasServices = document.getElementById('tableWrapper').style.display !== 'none';
+          const hasNews = document.getElementById('starredNewsWrap').classList.contains('active');
+          const hasEvents = document.getElementById('starredEventsWrap').classList.contains('active');
+          if (!hasServices && !hasNews && !hasEvents) {
+            const wrap = document.getElementById('starredEventsWrap');
+            wrap.innerHTML = '<div style="text-align:center;padding:40px 0;font-size:13px;font-weight:900">NO STARRED ITEMS</div>';
+            wrap.classList.add('active');
+          }
+        });
         return;
       }
 
