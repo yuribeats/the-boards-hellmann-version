@@ -14,8 +14,8 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { author, title, body, image, imageExt } = req.body;
-    if (!body) return res.status(400).json({ error: 'Body is required' });
+    const { author, title, body, image, imageExt, isPoll, pollOptions } = req.body;
+    if (!body && !isPoll) return res.status(400).json({ error: 'Body is required' });
 
     const now = new Date();
     const dateStr = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
@@ -29,6 +29,11 @@ export default async function handler(req, res) {
       body: body || '',
       date: dateStr
     };
+
+    if (isPoll && Array.isArray(pollOptions) && pollOptions.length >= 2) {
+      submission.isPoll = true;
+      submission.pollOptions = pollOptions;
+    }
 
     if (image && imageExt) {
       const ext = imageExt.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'jpg';

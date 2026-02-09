@@ -633,6 +633,150 @@
       margin-left: 6px;
     }
 
+    .news-comments-toggle {
+      font-size: 11px;
+      font-weight: 900;
+      margin-top: 8px;
+      cursor: default;
+      opacity: 0.5;
+    }
+    .news-comments-toggle:hover { opacity: 1; }
+    .news-comments-section {
+      display: none;
+      margin-top: 8px;
+    }
+    .news-comments-section.open { display: block; }
+    .news-comment {
+      padding: 8px 0;
+      border-top: 1px solid #000;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .news-comment-meta {
+      font-size: 10px;
+      opacity: 0.5;
+      margin-bottom: 2px;
+    }
+    .news-comment-input {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 12px;
+      padding: 8px 10px;
+      border: 2px solid #000;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .news-comment-input::placeholder { color: #999; }
+    .news-comment-submit {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 11px;
+      padding: 8px 16px;
+      border: 2px solid #000;
+      background: #000;
+      color: #fff;
+      cursor: default;
+      margin-top: 6px;
+      width: 100%;
+    }
+    .news-comment-submit:hover { background: #fff; color: #000; }
+
+    .poll-options { margin-top: 8px; }
+    .poll-option {
+      border: 2px solid #000;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      cursor: default;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .poll-option:hover { background: #E3E1DB; }
+    .poll-option.voted { background: #000; color: #fff; }
+    .poll-option-text { margin-bottom: 4px; }
+    .poll-option-voters {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+    .poll-option.voted .poll-option-voters { opacity: 0.5; }
+
+    .poll-form-options { margin-top: 8px; }
+    .poll-form-option-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .poll-form-option-row input { flex: 1; }
+    .poll-form-remove {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      width: 36px;
+      border: 2px solid #000;
+      background: #fff;
+      color: #000;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .poll-form-remove:hover { background: #000; color: #fff; }
+    .poll-add-btn {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 11px;
+      padding: 8px 16px;
+      border: 2px solid #000;
+      background: #fff;
+      color: #000;
+      cursor: default;
+      margin-top: 4px;
+    }
+    .poll-add-btn:hover { background: #000; color: #fff; }
+
+    .notif-wrap {
+      display: none;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 24px 0;
+    }
+    .notif-wrap.active { display: block; }
+    .notif-wrap label {
+      display: block;
+      font-size: 11px;
+      opacity: 0.5;
+      margin-bottom: 4px;
+      margin-top: 16px;
+    }
+    .notif-wrap label:first-child { margin-top: 0; }
+    .notif-wrap input[type="email"],
+    .notif-wrap input[type="tel"] {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+      width: 100%;
+    }
+    .notif-wrap input::placeholder { color: #999; }
+    .notif-section-label {
+      font-size: 12px;
+      font-weight: 900;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+    .notif-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
     @media (max-width: 768px) {
       body { padding: 12px; }
       h1 { font-size: 18px; letter-spacing: 4px; }
@@ -694,6 +838,7 @@
     <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')" class="menu-divider">NEWS</a>
     <a href="/events" id="menuEvents" onclick="event.preventDefault();navigate('events')" class="menu-divider">EVENTS</a>
     <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')" class="menu-divider">&#9733;</a>
+    <a href="/notifications" id="menuNotif" onclick="event.preventDefault();navigate('notifications')" class="menu-divider">NOTIFICATIONS</a>
     <a href="javascript:void(0)" id="menuSubmit" onclick="event.stopPropagation();toggleSubmitMenu()" class="menu-divider">SUBMIT</a>
     <a href="javascript:void(0)" id="menuLogout" onclick="doLogout()" class="menu-divider">LOGOUT</a>
   </div>
@@ -737,9 +882,42 @@
       <div class="faq-a">TAP THE STAR ON ANY VENDOR, NEWS POST OR EVENT TO BOOKMARK IT.</div>
     </div>
     <div class="faq-item">
+      <div class="faq-q">NOTIFICATIONS</div>
+      <div class="faq-a">MANAGE HOW WE ALERT YOU IF AT ALL. ADD YOUR EMAIL OR PHONE AND CHOOSE WHAT TO BE NOTIFIED ABOUT.</div>
+    </div>
+    <div class="faq-item">
       <div class="faq-q">GETTING STARTED</div>
       <div class="faq-a">CLICK ON THE MENU ICON IN THE UPPER LEFT HAND CORNER OF THE SCREEN.</div>
     </div>
+  </div>
+  <div class="notif-wrap" id="notifWrap">
+    <label>EMAIL ADDRESS</label>
+    <input type="email" id="notifEmail" placeholder="YOUR EMAIL">
+    <label>PHONE NUMBER</label>
+    <input type="tel" id="notifPhone" placeholder="YOUR PHONE NUMBER">
+    <div class="notif-section-label">NOTIFY ME ABOUT</div>
+    <div class="notif-check" onclick="var b=document.getElementById('notifVendors');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box small" id="notifVendors"></div>
+      <span>NEW VENDORS</span>
+    </div>
+    <div class="notif-check" onclick="var b=document.getElementById('notifNews');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box small" id="notifNews"></div>
+      <span>NEWS</span>
+    </div>
+    <div class="notif-check" onclick="var b=document.getElementById('notifEvents');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box small" id="notifEvents"></div>
+      <span>EVENTS</span>
+    </div>
+    <div class="notif-check" onclick="var b=document.getElementById('notifComments');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box small" id="notifComments"></div>
+      <span>COMMENTS</span>
+    </div>
+    <div class="notif-check" onclick="var b=document.getElementById('notifResponses');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box small" id="notifResponses"></div>
+      <span>RESPONSES</span>
+    </div>
+    <button class="submit-btn" id="notifSaveBtn" onclick="saveNotifications()">SAVE</button>
+    <div class="submit-msg" id="notifMsg"></div>
   </div>
   <div class="submit-form" id="submitForm">
     <label>SERVICE TYPE</label>
@@ -776,6 +954,18 @@
     <label>IMAGE</label>
     <input type="file" id="nImage" class="file-upload-input" accept="image/*" onchange="handleNewsFileSelect(this)">
     <label for="nImage" class="file-upload-label" id="nImageLabel">CHOOSE IMAGE</label>
+    <div class="custom-check" style="align-items:center" onclick="togglePollCheck()">
+      <div class="custom-check-box small" id="nPollCheck"></div>
+      <span>THIS IS A POLL</span>
+    </div>
+    <div id="pollOptionsWrap" style="display:none">
+      <label>POLL OPTIONS</label>
+      <div class="poll-form-options" id="pollFormOptions">
+        <div class="poll-form-option-row"><input type="text" class="poll-option-input" placeholder="OPTION 1"></div>
+        <div class="poll-form-option-row"><input type="text" class="poll-option-input" placeholder="OPTION 2"></div>
+      </div>
+      <button type="button" class="poll-add-btn" onclick="addPollOption()">ADD OPTION</button>
+    </div>
     <button class="submit-btn" id="newsSubmitBtn" onclick="submitNews()">SUBMIT</button>
     <div class="submit-msg" id="newsSubmitMsg"></div>
   </div>
@@ -1240,6 +1430,18 @@
       document.getElementById('eventDetail').classList.remove('active');
       document.getElementById('eventDetail').innerHTML = '';
       document.getElementById('faqWrap').classList.remove('active');
+      document.getElementById('notifWrap').classList.remove('active');
+
+      if (mode === 'notifications') {
+        document.getElementById('tableWrapper').style.display = 'none';
+        document.getElementById('modeLabel').textContent = 'NOTIFICATIONS';
+        document.getElementById('modeLabel').style.display = '';
+        document.getElementById('separator2').style.display = '';
+        document.getElementById('notifWrap').classList.add('active');
+        document.getElementById('notifMsg').textContent = '';
+        loadNotifications();
+        return;
+      }
 
       if (mode === 'faq') {
         document.getElementById('tableWrapper').style.display = 'none';
@@ -1487,14 +1689,45 @@
       }
     }
 
+    function togglePollCheck() {
+      const box = document.getElementById('nPollCheck');
+      box.classList.toggle('checked');
+      box.textContent = box.classList.contains('checked') ? 'X' : '';
+      document.getElementById('pollOptionsWrap').style.display = box.classList.contains('checked') ? '' : 'none';
+    }
+
+    function addPollOption() {
+      const container = document.getElementById('pollFormOptions');
+      const count = container.querySelectorAll('.poll-form-option-row').length;
+      if (count >= 5) return;
+      const row = document.createElement('div');
+      row.className = 'poll-form-option-row';
+      row.innerHTML = '<input type="text" class="poll-option-input" placeholder="OPTION ' + (count + 1) + '"><button type="button" class="poll-form-remove" onclick="removePollOption(this)">X</button>';
+      container.appendChild(row);
+    }
+
+    function removePollOption(btn) {
+      btn.parentElement.remove();
+    }
+
     async function submitNews() {
       const btn = document.getElementById('newsSubmitBtn');
       const msg = document.getElementById('newsSubmitMsg');
       const body = document.getElementById('nBody').value.trim();
+      const isPoll = document.getElementById('nPollCheck').classList.contains('checked');
 
-      if (!body) {
+      if (!body && !isPoll) {
         msg.textContent = 'NEWS BODY IS REQUIRED';
         return;
+      }
+
+      let pollOptions = [];
+      if (isPoll) {
+        pollOptions = [...document.querySelectorAll('.poll-option-input')].map(i => i.value.trim()).filter(Boolean);
+        if (pollOptions.length < 2) {
+          msg.textContent = 'POLLS NEED AT LEAST 2 OPTIONS';
+          return;
+        }
       }
 
       btn.disabled = true;
@@ -1507,6 +1740,11 @@
           title: document.getElementById('nTitle').value.trim(),
           body
         };
+
+        if (isPoll) {
+          payload.isPoll = true;
+          payload.pollOptions = pollOptions;
+        }
 
         const fileInput = document.getElementById('nImage');
         if (fileInput.files && fileInput.files[0]) {
@@ -1526,6 +1764,10 @@
         document.getElementById('nImage').value = '';
         document.getElementById('nImageLabel').textContent = 'CHOOSE IMAGE';
         document.getElementById('nImageLabel').classList.remove('has-file');
+        document.getElementById('nPollCheck').classList.remove('checked');
+        document.getElementById('nPollCheck').textContent = '';
+        document.getElementById('pollOptionsWrap').style.display = 'none';
+        document.getElementById('pollFormOptions').innerHTML = '<div class="poll-form-option-row"><input type="text" class="poll-option-input" placeholder="OPTION 1"></div><div class="poll-form-option-row"><input type="text" class="poll-option-input" placeholder="OPTION 2"></div>';
         btn.disabled = false;
         btn.textContent = 'SUBMIT';
         document.getElementById('submitModal').classList.add('active');
@@ -1566,7 +1808,13 @@
       if (p.image) html += '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards-hellmann-version/main/data/images/' + escapeHtml(p.image) + '" alt="">';
       if (p.title) html += '<div class="news-post-title">' + parseLinks(p.title) + '</div>';
       html += '<div class="news-post-date">' + escapeHtml(p.date) + (p.author ? ' &mdash; ' + escapeHtml(p.author) : '') + '</div>';
-      html += '<div class="news-post-body">' + parseLinks(p.body) + '</div>';
+
+      if (p.isPoll && p.pollOptions) {
+        html += '<div class="poll-options" id="poll-' + escapeHtml(p.id) + '"></div>';
+      } else {
+        html += '<div class="news-post-body">' + parseLinks(p.body) + '</div>';
+      }
+
       if (p.source === 'community') html += '<div style="font-size:11px;opacity:0.5;margin-top:8px">SUBMITTED BY COMMUNITY</div>';
       if (p.eventDate) {
         const parts = p.eventDate.split('/');
@@ -1577,7 +1825,124 @@
       const inner = document.createElement('div');
       inner.innerHTML = html;
       while (inner.firstChild) div.appendChild(inner.firstChild);
+
+      const commentsToggle = document.createElement('div');
+      commentsToggle.className = 'news-comments-toggle';
+      commentsToggle.textContent = 'COMMENT';
+      div.appendChild(commentsToggle);
+
+      const commentsSection = document.createElement('div');
+      commentsSection.className = 'news-comments-section';
+      const commentsList = document.createElement('div');
+      commentsList.className = 'news-comments-list';
+      commentsSection.appendChild(commentsList);
+      const commentInput = document.createElement('input');
+      commentInput.type = 'text';
+      commentInput.className = 'news-comment-input';
+      commentInput.placeholder = 'WRITE A COMMENT...';
+      commentsSection.appendChild(commentInput);
+      const commentBtn = document.createElement('button');
+      commentBtn.className = 'news-comment-submit';
+      commentBtn.textContent = 'SUBMIT';
+      commentsSection.appendChild(commentBtn);
+      div.appendChild(commentsSection);
+
+      let commentsLoaded = false;
+
+      commentsToggle.addEventListener('click', () => {
+        commentsSection.classList.toggle('open');
+        if (!commentsLoaded) {
+          commentsLoaded = true;
+          loadComments(p.id, commentsList, commentsToggle);
+        }
+      });
+
+      commentBtn.addEventListener('click', () => {
+        const text = commentInput.value.trim();
+        if (!text) return;
+        commentBtn.disabled = true;
+        commentBtn.textContent = 'SUBMITTING...';
+        fetch('/api/comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newsId: p.id, username: currentUser, text })
+        }).then(r => r.json()).then(data => {
+          if (data.comments) renderComments(data.comments, commentsList, commentsToggle);
+          commentInput.value = '';
+          commentBtn.disabled = false;
+          commentBtn.textContent = 'SUBMIT';
+        }).catch(() => {
+          commentBtn.disabled = false;
+          commentBtn.textContent = 'SUBMIT';
+        });
+      });
+
+      commentInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') commentBtn.click();
+      });
+
       container.appendChild(div);
+
+      if (p.isPoll && p.pollOptions) {
+        loadPoll(p.id, p.pollOptions, div.querySelector('.poll-options'));
+      }
+    }
+
+    async function loadComments(newsId, listEl, toggleEl) {
+      try {
+        const res = await fetch('/api/comments?newsId=' + encodeURIComponent(newsId));
+        const data = await res.json();
+        renderComments(data.comments || [], listEl, toggleEl);
+      } catch {}
+    }
+
+    function renderComments(comments, listEl, toggleEl) {
+      listEl.innerHTML = '';
+      toggleEl.textContent = comments.length > 0 ? comments.length + ' COMMENT' + (comments.length !== 1 ? 'S' : '') : 'COMMENT';
+      for (const c of comments) {
+        const el = document.createElement('div');
+        el.className = 'news-comment';
+        el.innerHTML = '<div class="news-comment-meta">' + escapeHtml(c.name) + ' &mdash; ' + escapeHtml(c.date) + '</div>' + escapeHtml(c.text);
+        listEl.appendChild(el);
+      }
+    }
+
+    async function loadPoll(newsId, options, container) {
+      let votes = {};
+      try {
+        const res = await fetch('/api/votes?newsId=' + encodeURIComponent(newsId));
+        const data = await res.json();
+        votes = data.votes || {};
+      } catch {}
+      renderPollOptions(newsId, options, votes, container);
+    }
+
+    function renderPollOptions(newsId, options, votes, container) {
+      container.innerHTML = '';
+      for (let i = 0; i < options.length; i++) {
+        const voters = votes[String(i)] || [];
+        const myVote = voters.includes(currentUser);
+        const el = document.createElement('div');
+        el.className = 'poll-option' + (myVote ? ' voted' : '');
+        let voterText = voters.length > 0 ? voters.join(', ') + ' (' + voters.length + ')' : '';
+        el.innerHTML = '<div class="poll-option-text">' + escapeHtml(options[i]) + '</div>' + (voterText ? '<div class="poll-option-voters">' + escapeHtml(voterText) + '</div>' : '');
+        el.addEventListener('click', () => {
+          castVote(newsId, i, options, container);
+        });
+        container.appendChild(el);
+      }
+    }
+
+    async function castVote(newsId, optionIndex, options, container) {
+      try {
+        const res = await fetch('/api/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newsId, username: currentUser, optionIndex })
+        });
+        const data = await res.json();
+        if (data.votes) renderPollOptions(newsId, options, data.votes, container);
+      } catch {}
     }
 
     function goToEventMonth(m, y) {
@@ -2071,8 +2436,56 @@
       }
     }
 
+    async function loadNotifications() {
+      try {
+        const res = await fetch('/api/notifications?username=' + encodeURIComponent(currentUser));
+        const data = await res.json();
+        const p = data.prefs || {};
+        document.getElementById('notifEmail').value = p.email || '';
+        document.getElementById('notifPhone').value = p.phone || '';
+        const checks = { notifVendors: p.vendors, notifNews: p.news, notifEvents: p.events, notifComments: p.comments, notifResponses: p.responses };
+        for (const [id, val] of Object.entries(checks)) {
+          const box = document.getElementById(id);
+          if (val) { box.classList.add('checked'); box.textContent = 'X'; }
+          else { box.classList.remove('checked'); box.textContent = ''; }
+        }
+      } catch {}
+    }
+
+    async function saveNotifications() {
+      const btn = document.getElementById('notifSaveBtn');
+      const msg = document.getElementById('notifMsg');
+      btn.disabled = true;
+      btn.textContent = 'SAVING...';
+      msg.textContent = '';
+      try {
+        const res = await fetch('/api/save-notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: currentUser,
+            email: document.getElementById('notifEmail').value.trim(),
+            phone: document.getElementById('notifPhone').value.trim(),
+            vendors: document.getElementById('notifVendors').classList.contains('checked'),
+            news: document.getElementById('notifNews').classList.contains('checked'),
+            events: document.getElementById('notifEvents').classList.contains('checked'),
+            comments: document.getElementById('notifComments').classList.contains('checked'),
+            responses: document.getElementById('notifResponses').classList.contains('checked')
+          })
+        });
+        if (!res.ok) throw new Error('Failed');
+        btn.disabled = false;
+        btn.textContent = 'SAVE';
+        msg.textContent = 'SAVED';
+      } catch {
+        btn.disabled = false;
+        btn.textContent = 'SAVE';
+        msg.textContent = 'FAILED TO SAVE. TRY AGAIN.';
+      }
+    }
+
     function navigate(mode) {
-      const paths = { faq: '/faq', table: '/vendors', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', news: '/news', events: '/events' };
+      const paths = { faq: '/faq', table: '/vendors', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', 'submit-event': '/submit-event', news: '/news', events: '/events', notifications: '/notifications' };
       history.pushState(null, '', paths[mode] || '/');
       switchMode(mode);
     }
@@ -2099,6 +2512,7 @@
       else if (p === '/submit-event') switchMode('submit-event');
       else if (p === '/news') switchMode('news');
       else if (p === '/events') switchMode('events');
+      else if (p === '/notifications') switchMode('notifications');
       else switchMode('faq');
     });
 
@@ -2115,6 +2529,7 @@
         else if (p === '/submit-event') switchMode('submit-event');
         else if (p === '/news') switchMode('news');
         else if (p === '/events') switchMode('events');
+        else if (p === '/notifications') switchMode('notifications');
         else switchMode('faq');
       });
     }
