@@ -126,6 +126,23 @@
       font-size: 14px;
       margin-top: 16px;
     }
+    .file-upload-label {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+      width: 100%;
+      display: block;
+      text-align: center;
+      cursor: default;
+      background: #fff;
+      color: #000;
+    }
+    .file-upload-label:hover { background: #000; color: #fff; }
+    .file-upload-label.has-file { background: #000; color: #fff; }
+    .file-upload-input { display: none; }
 
     @media (max-width: 768px) {
       body { padding: 12px; }
@@ -156,6 +173,7 @@
     <div class="menu-overlay" id="adminMenu">
       <a href="javascript:void(0)" onclick="showSection('submissions')">SUBMISSIONS</a>
       <a href="javascript:void(0)" onclick="showSection('post')">MAKE A POST</a>
+      <a href="javascript:void(0)" onclick="showSection('upload')">UPLOAD IMAGE</a>
       <a href="/">SITE</a>
     </div>
 
@@ -177,6 +195,20 @@
         <div class="post-msg" id="postMsg"></div>
       </div>
     </div>
+
+    <div id="uploadSection" style="display:none">
+      <h1>UPLOAD IMAGE</h1>
+      <hr class="separator">
+      <div class="post-form">
+        <label>IMAGE</label>
+        <input type="file" id="uploadFile" class="file-upload-input" accept="image/*" onchange="handleUploadFile(this)">
+        <label for="uploadFile" class="file-upload-label" id="uploadFileLabel">CHOOSE IMAGE</label>
+        <label>LINK</label>
+        <input type="text" id="uploadLink" placeholder="URL THIS IMAGE LINKS TO">
+        <button class="btn" style="margin-top:24px;width:100%" onclick="uploadImage()">UPLOAD</button>
+        <div class="post-msg" id="uploadMsg"></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -188,6 +220,7 @@
       document.getElementById('adminMenu').classList.remove('open');
       document.getElementById('submissionsSection').style.display = section === 'submissions' ? '' : 'none';
       document.getElementById('postSection').style.display = section === 'post' ? '' : 'none';
+      document.getElementById('uploadSection').style.display = section === 'upload' ? '' : 'none';
     }
 
     document.addEventListener('click', (e) => {
@@ -319,6 +352,63 @@
         setTimeout(() => { msg.textContent = ''; }, 2000);
       } catch (e) {
         msg.textContent = 'FAILED TO POST';
+      }
+    }
+
+    function handleUploadFile(input) {
+      const label = document.getElementById('uploadFileLabel');
+      if (input.files && input.files[0]) {
+        label.textContent = input.files[0].name.toUpperCase();
+        label.classList.add('has-file');
+      } else {
+        label.textContent = 'CHOOSE IMAGE';
+        label.classList.remove('has-file');
+      }
+    }
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadImage() {
+      const fileInput = document.getElementById('uploadFile');
+      const link = document.getElementById('uploadLink').value.trim();
+      const msg = document.getElementById('uploadMsg');
+
+      if (!fileInput.files || !fileInput.files[0]) {
+        msg.textContent = 'IMAGE IS REQUIRED';
+        return;
+      }
+
+      msg.textContent = 'UPLOADING...';
+
+      try {
+        const file = fileInput.files[0];
+        const image = await readFileAsBase64(file);
+        const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ image, imageExt: ext, link })
+        });
+        if (!res.ok) throw new Error('Failed');
+        fileInput.value = '';
+        document.getElementById('uploadFileLabel').textContent = 'CHOOSE IMAGE';
+        document.getElementById('uploadFileLabel').classList.remove('has-file');
+        document.getElementById('uploadLink').value = '';
+        msg.textContent = 'UPLOADED';
+        setTimeout(() => { msg.textContent = ''; }, 2000);
+      } catch (e) {
+        msg.textContent = 'FAILED TO UPLOAD';
       }
     }
 

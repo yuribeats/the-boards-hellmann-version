@@ -882,7 +882,14 @@
         feed.innerHTML = '';
 
         const withImages = rows.filter(r => r.image);
-        if (withImages.length === 0) {
+        let galleryImages = [];
+        try {
+          const gRes = await fetch('/api/gallery');
+          const gData = await gRes.json();
+          galleryImages = gData.images || [];
+        } catch {}
+
+        if (withImages.length === 0 && galleryImages.length === 0) {
           feed.innerHTML = '<div class="loading">NO IMAGES</div>';
           updateMenuDividers();
           return;
@@ -902,6 +909,24 @@
             document.getElementById('separator2').style.display = 'none';
             showProfile(row);
           });
+          feed.appendChild(tile);
+        }
+
+        for (const gi of galleryImages) {
+          const tile = document.createElement('div');
+          tile.className = 'mosaic-tile';
+          const img = document.createElement('img');
+          img.src = 'https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + gi.image;
+          img.alt = '';
+          img.loading = 'lazy';
+          tile.appendChild(img);
+          if (gi.link) {
+            tile.addEventListener('click', () => {
+              let href = gi.link;
+              if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+              window.open(href, '_blank');
+            });
+          }
           feed.appendChild(tile);
         }
       } else {
