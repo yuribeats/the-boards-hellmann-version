@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { id, event, shortName, date, endDate, location, contact, site, repeatWeekly, repeatMonthly, repeatYearly } = req.body;
+    const { id, event, shortName, date, endDate, startTime, endTime, location, contact, site, repeatWeekly, repeatMonthly, repeatYearly } = req.body;
     if (!id) return res.status(400).json({ error: 'Event ID is required' });
 
     let events = [];
@@ -38,6 +38,8 @@ export default async function handler(req, res) {
     if (shortName !== undefined) events[idx].shortName = shortName;
     if (date !== undefined) events[idx].date = date;
     if (endDate !== undefined) events[idx].endDate = endDate;
+    if (startTime !== undefined) events[idx].startTime = startTime;
+    if (endTime !== undefined) events[idx].endTime = endTime;
     if (location !== undefined) events[idx].location = location;
     if (contact !== undefined) events[idx].contact = contact;
     if (site !== undefined) events[idx].site = site;

@@ -1101,6 +1101,10 @@
     <input type="text" id="eDate" placeholder="MM/DD/YYYY">
     <label>END DATE</label>
     <input type="text" id="eEndDate" placeholder="MM/DD/YYYY (OPTIONAL)">
+    <label>START TIME</label>
+    <input type="text" id="eStartTime" placeholder="E.G. 6:00 PM (OPTIONAL)">
+    <label>END TIME</label>
+    <input type="text" id="eEndTime" placeholder="E.G. 9:00 PM (OPTIONAL)">
     <label>LOCATION</label>
     <input type="text" id="eLocation" placeholder="EVENT LOCATION">
     <label>CONTACT</label>
@@ -2489,9 +2493,14 @@
       var dateDisplay = ev.date || '';
       if (ev.endDate) dateDisplay += ' - ' + ev.endDate;
 
+      var timeDisplay = '';
+      if (ev.startTime) timeDisplay = ev.startTime;
+      if (ev.endTime) timeDisplay += (timeDisplay ? ' - ' : '') + ev.endTime;
+
       const fields = [
         ['EVENT', ev.event],
         ['DATE', dateDisplay],
+        ['TIME', timeDisplay],
         ['REPEATING', repeatLabel],
         ['LOCATION', ev.location],
         ['CONTACT', ev.contact],
@@ -2613,6 +2622,8 @@
         { label: 'SHORT NAME', key: 'shortName', val: ev.shortName || '' },
         { label: 'START DATE', key: 'date', val: ev.date || '', placeholder: 'MM/DD/YYYY' },
         { label: 'END DATE', key: 'endDate', val: ev.endDate || '', placeholder: 'MM/DD/YYYY (OPTIONAL)' },
+        { label: 'START TIME', key: 'startTime', val: ev.startTime || '', placeholder: 'E.G. 6:00 PM (OPTIONAL)' },
+        { label: 'END TIME', key: 'endTime', val: ev.endTime || '', placeholder: 'E.G. 9:00 PM (OPTIONAL)' },
         { label: 'LOCATION', key: 'location', val: ev.location || '' },
         { label: 'CONTACT', key: 'contact', val: ev.contact || '' },
         { label: 'SITE', key: 'site', val: ev.site || '' }
@@ -2696,6 +2707,8 @@
             shortName: inputs.shortName.value.trim(),
             date: dateVal,
             endDate: inputs.endDate.value.trim(),
+            startTime: inputs.startTime.value.trim(),
+            endTime: inputs.endTime.value.trim(),
             location: inputs.location.value.trim(),
             contact: inputs.contact.value.trim(),
             site: inputs.site.value.trim(),
@@ -2838,6 +2851,8 @@
           author: currentUser,
           shortName: document.getElementById('eShortName').value.trim(),
           date: parseInt(dateParts[0]) + '/' + parseInt(dateParts[1]) + '/' + eYear,
+          startTime: document.getElementById('eStartTime').value.trim(),
+          endTime: document.getElementById('eEndTime').value.trim(),
           location: document.getElementById('eLocation').value.trim(),
           contact: document.getElementById('eContact').value.trim(),
           site: document.getElementById('eSite').value.trim(),
@@ -2874,6 +2889,8 @@
         document.getElementById('eShortName').value = '';
         document.getElementById('eDate').value = '';
         document.getElementById('eEndDate').value = '';
+        document.getElementById('eStartTime').value = '';
+        document.getElementById('eEndTime').value = '';
         document.getElementById('eLocation').value = '';
         document.getElementById('eContact').value = '';
         document.getElementById('eSite').value = '';
