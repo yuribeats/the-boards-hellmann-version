@@ -1258,7 +1258,18 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('siteContent').classList.add('active');
       if (!rows.length) load();
-      switchMode('faq');
+      var p = location.pathname;
+      if (p === '/vendors') switchMode('table');
+      else if (p === '/starred') switchMode('starred');
+      else if (p === '/submit') switchMode('submit');
+      else if (p === '/submit-news') switchMode('submit-news');
+      else if (p === '/submit-event') switchMode('submit-event');
+      else if (p === '/submit-user') switchMode('submit-user');
+      else if (p === '/news') switchMode('news');
+      else if (p === '/events') switchMode('events');
+      else if (p === '/notifications') switchMode('notifications');
+      else if (p.startsWith('/profile/')) openProfileFromUrl();
+      else switchMode('faq');
     }
 
     let rows = [];
