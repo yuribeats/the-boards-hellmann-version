@@ -12,6 +12,7 @@
       font-display: swap;
     }
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <title>HELLMANN HARPER RYBAK</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -248,6 +249,78 @@
       padding: 10px 12px;
       text-align: center;
     }
+
+    .gcal-link {
+      cursor: default;
+      text-decoration: none;
+      opacity: 0.4;
+    }
+    .gcal-link:hover { opacity: 1; }
+    .gcal-dropdown {
+      display: none;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 2px solid #000;
+      z-index: 60;
+      max-height: 300px;
+      overflow-y: auto;
+      min-width: 280px;
+    }
+    .gcal-dropdown.open { display: block; }
+    .gcal-dropdown-item {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: default;
+      border-bottom: 1px solid #000;
+    }
+    .gcal-dropdown-item:last-child { border-bottom: none; }
+    .gcal-dropdown-item:hover { background: #E3E1DB; }
+    .gcal-dropdown-item-date {
+      font-size: 10px;
+      opacity: 0.5;
+      margin-top: 2px;
+    }
+    .gcal-dialog {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .gcal-dialog.active { display: flex; }
+    .gcal-dialog-box {
+      background: #E3E1DB;
+      border: 2px solid #000;
+      padding: 32px;
+      max-width: 400px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: default;
+    }
+    .gcal-dialog-box .gcal-dialog-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      justify-content: center;
+    }
+    .gcal-dialog-box .gcal-dialog-btn {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 12px 32px;
+      border: 2px solid #000;
+      background: #000;
+      color: #fff;
+      cursor: default;
+    }
+    .gcal-dialog-box .gcal-dialog-btn:hover { background: #fff; color: #000; }
 
     .submit-form {
       display: none;
@@ -892,7 +965,8 @@
     <div class="last-updated-corner" id="lastUpdated"><span class="lu-label">LAST UPDATED</span><span class="lu-date">FEBRUARY 8, 2026</span></div>
   </div>
   <hr class="separator">
-  <div class="mode-label" id="modeLabel" style="display:none"></div>
+  <div class="mode-label" id="modeLabel" style="display:none;position:relative"></div>
+  <div id="gcalDropdown" class="gcal-dropdown"></div>
   <hr class="separator" id="separator2" style="display:none">
   <div class="profile" id="profile"></div>
   <div class="news-feed" id="newsFeed"></div>
@@ -1023,8 +1097,10 @@
     <input type="text" id="eEvent" placeholder="EVENT NAME">
     <label>SHORT NAME</label>
     <input type="text" id="eShortName" placeholder="SHOWN ON CALENDAR">
-    <label>DATE</label>
+    <label>START DATE</label>
     <input type="text" id="eDate" placeholder="MM/DD/YYYY">
+    <label>END DATE</label>
+    <input type="text" id="eEndDate" placeholder="MM/DD/YYYY (OPTIONAL)">
     <label>LOCATION</label>
     <input type="text" id="eLocation" placeholder="EVENT LOCATION">
     <label>CONTACT</label>
@@ -1043,6 +1119,10 @@
       <div class="custom-check" style="margin-top:0;flex:1;align-items:center" onclick="var b=document.getElementById('eRepeatMonthly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
         <div class="custom-check-box small" id="eRepeatMonthly"></div>
         <span>MONTHLY</span>
+      </div>
+      <div class="custom-check" style="margin-top:0;flex:1;align-items:center" onclick="var b=document.getElementById('eRepeatYearly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+        <div class="custom-check-box small" id="eRepeatYearly"></div>
+        <span>YEARLY</span>
       </div>
     </div>
     <div class="custom-check" style="align-items:center" onclick="var b=document.getElementById('ePublishNews');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
@@ -1073,6 +1153,15 @@
   </div>
   <div class="submit-modal" id="submitModal" onclick="submitModal.classList.remove('active'); switchMode('table');">
     <div class="submit-modal-box">THANK YOU. YOUR SUBMISSION IS NOW LIVE.</div>
+  </div>
+  <div class="gcal-dialog" id="gcalDialog" onclick="dismissGcalDialog()">
+    <div class="gcal-dialog-box" onclick="event.stopPropagation()">
+      CONNECT YOUR GOOGLE CALENDAR?
+      <div class="gcal-dialog-buttons">
+        <div class="gcal-dialog-btn" onclick="connectGcal()">YES</div>
+        <div class="gcal-dialog-btn" onclick="dismissGcalDialog()">NO</div>
+      </div>
+    </div>
   </div>
   <div class="service-dropdown" id="serviceDropdown"></div>
   <div class="table-wrapper" id="tableWrapper">
@@ -1178,7 +1267,7 @@
     let sortAsc = false;
     let showStarred = false;
     let serviceFilter = null;
-    const VISIBLE_COLS = ['service', 'name', 'author', 'date uploaded', 'phone', 'site', 'description'];
+    const VISIBLE_COLS = ['service', 'name', 'phone', 'author', 'date uploaded', 'site', 'description'];
     const PROFILE_COLS = ['name', 'service', 'author', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
     const COL_DISPLAY = { 'service': 'SERVICE TYPE', 'date uploaded': 'ADDED', 'author': 'ADDED BY' };
 
@@ -1258,7 +1347,7 @@
       VISIBLE_COLS.forEach(col => {
         const th = document.createElement('th');
         th.dataset.col = col;
-        if (col !== 'service' && col !== 'name') th.className = 'mobile-hide';
+        if (col !== 'service' && col !== 'name' && col !== 'phone') th.className = 'mobile-hide';
         th.textContent = COL_DISPLAY[col] || col.toUpperCase();
         const arrow = document.createElement('span');
         arrow.className = 'sort-arrow';
@@ -1398,7 +1487,7 @@
         tr.appendChild(starTd);
         VISIBLE_COLS.forEach(col => {
           const td = document.createElement('td');
-          if (col !== 'service' && col !== 'name') td.classList.add('mobile-hide');
+          if (col !== 'service' && col !== 'name' && col !== 'phone') td.classList.add('mobile-hide');
           if (col === 'site' && row[col]) {
             const a = document.createElement('a');
             let href = row[col];
@@ -1523,6 +1612,8 @@
       document.getElementById('eventDetail').innerHTML = '';
       document.getElementById('faqWrap').classList.remove('active');
       document.getElementById('notifWrap').classList.remove('active');
+      document.getElementById('gcalDropdown').classList.remove('open');
+      document.getElementById('gcalDropdown').innerHTML = '';
 
       if (mode === 'notifications') {
         document.getElementById('tableWrapper').style.display = 'none';
@@ -1545,7 +1636,7 @@
 
       if (mode === 'news') {
         document.getElementById('tableWrapper').style.display = 'none';
-        document.getElementById('modeLabel').textContent = 'NEWS';
+        document.getElementById('modeLabel').innerHTML = 'NEWS / <span class="gcal-link" onclick="navigate(\'submit-news\')">SUBMIT</span>';
         document.getElementById('modeLabel').style.display = '';
         document.getElementById('separator2').style.display = '';
         const feed = document.getElementById('newsFeed');
@@ -1598,7 +1689,7 @@
 
       if (mode === 'submit-event') {
         document.getElementById('tableWrapper').style.display = 'none';
-        document.getElementById('modeLabel').textContent = 'SUBMIT AN EVENT';
+        document.getElementById('modeLabel').innerHTML = 'SUBMIT AN EVENT / <span class="gcal-link" onclick="onGcalClick()">SUBMIT FROM GCAL</span>';
         document.getElementById('modeLabel').style.display = '';
         document.getElementById('separator2').style.display = '';
         document.getElementById('eventSubmitForm').classList.add('active');
@@ -1628,7 +1719,7 @@
 
       if (mode === 'events') {
         document.getElementById('tableWrapper').style.display = 'none';
-        document.getElementById('modeLabel').textContent = 'EVENTS';
+        document.getElementById('modeLabel').innerHTML = 'EVENTS / <span class="gcal-link" onclick="navigate(\'submit-event\')">SUBMIT</span>';
         document.getElementById('modeLabel').style.display = '';
         document.getElementById('separator2').style.display = '';
         document.getElementById('calendarWrap').classList.add('active');
@@ -1662,8 +1753,9 @@
 
       showStarred = false;
 
-      document.getElementById('modeLabel').style.display = 'none';
-      document.getElementById('separator2').style.display = 'none';
+      document.getElementById('modeLabel').innerHTML = 'VENDORS / <span class="gcal-link" onclick="navigate(\'submit\')">SUBMIT</span>';
+      document.getElementById('modeLabel').style.display = '';
+      document.getElementById('separator2').style.display = '';
       document.getElementById('tableWrapper').style.display = '';
       render();
     }
@@ -2173,29 +2265,91 @@
       const weekday = origDate.getDay();
       const daysInView = new Date(viewYear, viewMonth + 1, 0).getDate();
       const days = [];
+      const viewStart = new Date(viewYear, viewMonth, 1);
+      const viewEnd = new Date(viewYear, viewMonth, daysInView);
 
-      const isOrigMonth = viewMonth === eMonth && viewYear === eYear;
-      let nextM = eMonth + 1, nextY = eYear;
+      var endDate = null;
+      if (ev.endDate) {
+        var eParts = ev.endDate.split('/');
+        if (eParts.length === 3) endDate = new Date(parseInt(eParts[2]), parseInt(eParts[0]) - 1, parseInt(eParts[1]));
+      }
+
+      function addMultiDayRange(startDate, ed) {
+        var last = ed || startDate;
+        var rangeStart = new Date(Math.max(startDate.getTime(), viewStart.getTime()));
+        var rangeEnd = new Date(Math.min(last.getTime(), viewEnd.getTime()));
+        for (var d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
+          if (d.getMonth() === viewMonth && d.getFullYear() === viewYear) {
+            var day = d.getDate();
+            if (days.indexOf(day) === -1) days.push(day);
+          }
+        }
+      }
+
+      var isOrigMonth = viewMonth === eMonth && viewYear === eYear;
+      var nextM = eMonth + 1, nextY = eYear;
       if (nextM > 11) { nextM = 0; nextY++; }
-      const isNextMonth = viewMonth === nextM && viewYear === nextY;
+      var isNextMonth = viewMonth === nextM && viewYear === nextY;
 
       if (isOrigMonth) {
-        days.push(eDay);
-        if (ev.repeatWeekly) {
-          let d = eDay + 7;
-          while (d <= daysInView) { days.push(d); d += 7; }
-        }
-      } else if (isNextMonth && ev.repeatMonthly) {
-        if (ev.repeatWeekly) {
-          let d = 1;
-          while (d <= daysInView && new Date(viewYear, viewMonth, d).getDay() !== weekday) d++;
-          while (d <= daysInView) { days.push(d); d += 7; }
+        if (endDate) {
+          addMultiDayRange(origDate, endDate);
         } else {
-          const nthOccurrence = Math.ceil(eDay / 7);
-          let d = 1;
+          days.push(eDay);
+        }
+        if (ev.repeatWeekly) {
+          var startDay = endDate ? (endDate.getMonth() === eMonth && endDate.getFullYear() === eYear ? endDate.getDate() : daysInView) : eDay;
+          var d = startDay + (7 - ((startDay - eDay) % 7 || 7));
+          if (d === startDay) d += 7;
+          while (d <= daysInView) { if (days.indexOf(d) === -1) days.push(d); d += 7; }
+        }
+      } else if (endDate && !isOrigMonth) {
+        if (origDate <= viewEnd && endDate >= viewStart) {
+          addMultiDayRange(origDate, endDate);
+        }
+      }
+
+      if (!isOrigMonth && ev.repeatMonthly && isNextMonth) {
+        if (ev.repeatWeekly) {
+          var d = 1;
           while (d <= daysInView && new Date(viewYear, viewMonth, d).getDay() !== weekday) d++;
-          const target = d + (nthOccurrence - 1) * 7;
-          if (target <= daysInView) days.push(target);
+          while (d <= daysInView) { if (days.indexOf(d) === -1) days.push(d); d += 7; }
+        } else {
+          var nthOccurrence = Math.ceil(eDay / 7);
+          var d = 1;
+          while (d <= daysInView && new Date(viewYear, viewMonth, d).getDay() !== weekday) d++;
+          var target = d + (nthOccurrence - 1) * 7;
+          if (target <= daysInView && days.indexOf(target) === -1) days.push(target);
+        }
+      }
+
+      if (ev.repeatYearly && !isOrigMonth) {
+        var viewKey = viewYear * 12 + viewMonth;
+        var origKey = eYear * 12 + eMonth;
+        if (viewKey > origKey && viewMonth === eMonth) {
+          if (endDate) {
+            var span = Math.round((endDate - origDate) / 86400000);
+            var yearlyStart = new Date(viewYear, eMonth, eDay);
+            var yearlyEnd = new Date(yearlyStart);
+            yearlyEnd.setDate(yearlyEnd.getDate() + span);
+            addMultiDayRange(yearlyStart, yearlyEnd);
+          } else {
+            var dayInMonth = Math.min(eDay, daysInView);
+            if (days.indexOf(dayInMonth) === -1) days.push(dayInMonth);
+          }
+        }
+        if (endDate) {
+          var span = Math.round((endDate - origDate) / 86400000);
+          var yearlyStart = new Date(viewYear, eMonth, eDay);
+          var yearlyEnd = new Date(yearlyStart);
+          yearlyEnd.setDate(yearlyEnd.getDate() + span);
+          if (yearlyEnd.getMonth() !== eMonth || yearlyEnd.getFullYear() !== viewYear) {
+            var viewKey2 = viewYear * 12 + viewMonth;
+            var endKey = yearlyEnd.getFullYear() * 12 + yearlyEnd.getMonth();
+            if (viewKey2 > origKey && viewKey2 >= viewYear * 12 + eMonth && viewKey2 <= endKey) {
+              addMultiDayRange(yearlyStart, yearlyEnd);
+            }
+          }
         }
       }
 
@@ -2287,6 +2441,15 @@
         document.getElementById('calendarWrap').classList.add('active');
       });
       topRow.appendChild(back);
+      const rightBtns = document.createElement('div');
+      rightBtns.style.cssText = 'display:flex;align-items:center;gap:12px';
+      const editBtn = document.createElement('span');
+      editBtn.style.cssText = 'font-size:12px;font-weight:900;cursor:default;border:2px solid #000;padding:4px 10px';
+      editBtn.textContent = 'EDIT';
+      editBtn.addEventListener('click', () => editEvent(ev));
+      editBtn.addEventListener('mouseenter', () => { editBtn.style.background = '#000'; editBtn.style.color = '#fff'; });
+      editBtn.addEventListener('mouseleave', () => { editBtn.style.background = ''; editBtn.style.color = ''; });
+      rightBtns.appendChild(editBtn);
       const star = document.createElement('span');
       star.style.cssText = 'font-size:22px;cursor:default;user-select:none';
       star.textContent = isEventStarred(ev.id) ? '\u2605' : '\u2606';
@@ -2294,7 +2457,8 @@
         toggleEventStar(ev.id);
         star.textContent = isEventStarred(ev.id) ? '\u2605' : '\u2606';
       });
-      topRow.appendChild(star);
+      rightBtns.appendChild(star);
+      topRow.appendChild(rightBtns);
       detail.appendChild(topRow);
 
       if (ev.image) {
@@ -2305,14 +2469,18 @@
         detail.appendChild(img);
       }
 
-      let repeatLabel = '';
-      if (ev.repeatWeekly && ev.repeatMonthly) repeatLabel = 'WEEKLY + MONTHLY';
-      else if (ev.repeatWeekly) repeatLabel = 'WEEKLY';
-      else if (ev.repeatMonthly) repeatLabel = 'MONTHLY';
+      let repeatParts = [];
+      if (ev.repeatWeekly) repeatParts.push('WEEKLY');
+      if (ev.repeatMonthly) repeatParts.push('MONTHLY');
+      if (ev.repeatYearly) repeatParts.push('YEARLY');
+      var repeatLabel = repeatParts.join(' + ');
+
+      var dateDisplay = ev.date || '';
+      if (ev.endDate) dateDisplay += ' - ' + ev.endDate;
 
       const fields = [
         ['EVENT', ev.event],
-        ['DATE', ev.date],
+        ['DATE', dateDisplay],
         ['REPEATING', repeatLabel],
         ['LOCATION', ev.location],
         ['CONTACT', ev.contact],
@@ -2345,7 +2513,7 @@
       const attendLabel = document.createElement('span');
       attendLabel.textContent = 'ATTENDING';
 
-      const isRecurring = !!(ev.repeatWeekly || ev.repeatMonthly);
+      const isRecurring = !!(ev.repeatWeekly || ev.repeatMonthly || ev.repeatYearly);
 
       const attendAllRow = document.createElement('div');
       attendAllRow.className = 'attend-row';
@@ -2413,6 +2581,133 @@
         kidsBox.classList.toggle('checked');
         kidsBox.textContent = kidsBox.classList.contains('checked') ? 'X' : '';
         updateAttendance(ev.id, true, kidsBox.classList.contains('checked'), attendAllBox.classList.contains('checked'), guestListWrap);
+      });
+    }
+
+    function editEvent(ev) {
+      var detail = document.getElementById('eventDetail');
+      detail.innerHTML = '';
+
+      var topRow = document.createElement('div');
+      topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
+      var cancel = document.createElement('div');
+      cancel.className = 'event-detail-back';
+      cancel.textContent = 'CANCEL';
+      cancel.addEventListener('click', function() { showEventDetail(ev); });
+      topRow.appendChild(cancel);
+      detail.appendChild(topRow);
+
+      var formFields = [
+        { label: 'EVENT', key: 'event', val: ev.event || '' },
+        { label: 'SHORT NAME', key: 'shortName', val: ev.shortName || '' },
+        { label: 'START DATE', key: 'date', val: ev.date || '', placeholder: 'MM/DD/YYYY' },
+        { label: 'END DATE', key: 'endDate', val: ev.endDate || '', placeholder: 'MM/DD/YYYY (OPTIONAL)' },
+        { label: 'LOCATION', key: 'location', val: ev.location || '' },
+        { label: 'CONTACT', key: 'contact', val: ev.contact || '' },
+        { label: 'SITE', key: 'site', val: ev.site || '' }
+      ];
+
+      var inputs = {};
+      for (var i = 0; i < formFields.length; i++) {
+        var f = formFields[i];
+        var lbl = document.createElement('label');
+        lbl.style.cssText = 'display:block;font-size:11px;opacity:0.5;margin-bottom:4px;margin-top:16px';
+        lbl.textContent = f.label;
+        detail.appendChild(lbl);
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = f.val;
+        inp.placeholder = f.placeholder || f.label;
+        inp.style.cssText = 'font-family:Arial,Helvetica,sans-serif;font-weight:900;text-transform:uppercase;font-size:14px;padding:10px 12px;border:2px solid #000;width:100%';
+        detail.appendChild(inp);
+        inputs[f.key] = inp;
+      }
+
+      var repLabel = document.createElement('label');
+      repLabel.style.cssText = 'display:block;font-size:11px;opacity:0.5;margin-bottom:4px;margin-top:16px';
+      repLabel.textContent = 'REPEATING';
+      detail.appendChild(repLabel);
+
+      var repRow = document.createElement('div');
+      repRow.style.cssText = 'display:flex;gap:16px';
+
+      var repeatOptions = [
+        { key: 'repeatWeekly', label: 'WEEKLY', val: !!ev.repeatWeekly },
+        { key: 'repeatMonthly', label: 'MONTHLY', val: !!ev.repeatMonthly },
+        { key: 'repeatYearly', label: 'YEARLY', val: !!ev.repeatYearly }
+      ];
+      var checkboxes = {};
+
+      for (var i = 0; i < repeatOptions.length; i++) {
+        (function(opt) {
+          var wrap = document.createElement('div');
+          wrap.style.cssText = 'display:flex;align-items:center;gap:10px;flex:1;font-size:13px;font-weight:900';
+          var box = document.createElement('div');
+          box.className = 'custom-check-box small' + (opt.val ? ' checked' : '');
+          box.textContent = opt.val ? 'X' : '';
+          var span = document.createElement('span');
+          span.textContent = opt.label;
+          wrap.appendChild(box);
+          wrap.appendChild(span);
+          wrap.addEventListener('click', function() {
+            box.classList.toggle('checked');
+            box.textContent = box.classList.contains('checked') ? 'X' : '';
+          });
+          repRow.appendChild(wrap);
+          checkboxes[opt.key] = box;
+        })(repeatOptions[i]);
+      }
+      detail.appendChild(repRow);
+
+      var saveBtn = document.createElement('button');
+      saveBtn.className = 'submit-btn';
+      saveBtn.textContent = 'SAVE';
+      saveBtn.style.marginTop = '24px';
+      detail.appendChild(saveBtn);
+
+      var msgDiv = document.createElement('div');
+      msgDiv.className = 'submit-msg';
+      detail.appendChild(msgDiv);
+
+      saveBtn.addEventListener('click', async function() {
+        var dateVal = inputs.date.value.trim();
+        if (!inputs.event.value.trim() || !dateVal) {
+          msgDiv.textContent = 'EVENT NAME AND DATE ARE REQUIRED';
+          return;
+        }
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'SAVING...';
+        msgDiv.textContent = '';
+        try {
+          var payload = {
+            id: ev.id,
+            event: inputs.event.value.trim(),
+            shortName: inputs.shortName.value.trim(),
+            date: dateVal,
+            endDate: inputs.endDate.value.trim(),
+            location: inputs.location.value.trim(),
+            contact: inputs.contact.value.trim(),
+            site: inputs.site.value.trim(),
+            repeatWeekly: checkboxes.repeatWeekly.classList.contains('checked'),
+            repeatMonthly: checkboxes.repeatMonthly.classList.contains('checked'),
+            repeatYearly: checkboxes.repeatYearly.classList.contains('checked')
+          };
+          var res = await fetch('/api/edit-event', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('Failed');
+          var data = await res.json();
+          var updated = data.event || Object.assign({}, ev, payload);
+          var idx = calendarEvents.findIndex(function(e) { return e.id === ev.id; });
+          if (idx >= 0) calendarEvents[idx] = updated;
+          showEventDetail(updated);
+        } catch (e) {
+          msgDiv.textContent = 'SAVE FAILED. TRY AGAIN.';
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'SAVE';
+        }
       });
     }
 
@@ -2537,8 +2832,19 @@
           site: document.getElementById('eSite').value.trim(),
           repeatWeekly: document.getElementById('eRepeatWeekly').classList.contains('checked'),
           repeatMonthly: document.getElementById('eRepeatMonthly').classList.contains('checked'),
+          repeatYearly: document.getElementById('eRepeatYearly').classList.contains('checked'),
           publishToNews: document.getElementById('ePublishNews').classList.contains('checked')
         };
+
+        const endDateVal = document.getElementById('eEndDate').value.trim();
+        if (endDateVal) {
+          const edParts = endDateVal.split('/');
+          if ((edParts.length === 2 || edParts.length === 3) && parseInt(edParts[0]) && parseInt(edParts[1])) {
+            let edYear = edParts.length === 3 && parseInt(edParts[2]) ? parseInt(edParts[2]) : eYear;
+            if (edYear < 100) edYear += 2000;
+            payload.endDate = parseInt(edParts[0]) + '/' + parseInt(edParts[1]) + '/' + edYear;
+          }
+        }
 
         const fileInput = document.getElementById('eImage');
         if (fileInput.files && fileInput.files[0]) {
@@ -2556,6 +2862,7 @@
         document.getElementById('eEvent').value = '';
         document.getElementById('eShortName').value = '';
         document.getElementById('eDate').value = '';
+        document.getElementById('eEndDate').value = '';
         document.getElementById('eLocation').value = '';
         document.getElementById('eContact').value = '';
         document.getElementById('eSite').value = '';
@@ -2568,6 +2875,8 @@
         document.getElementById('eRepeatWeekly').textContent = '';
         document.getElementById('eRepeatMonthly').classList.remove('checked');
         document.getElementById('eRepeatMonthly').textContent = '';
+        document.getElementById('eRepeatYearly').classList.remove('checked');
+        document.getElementById('eRepeatYearly').textContent = '';
         btn.disabled = false;
         btn.textContent = 'SUBMIT';
         document.getElementById('submitModal').classList.add('active');
@@ -2742,6 +3051,103 @@
     });
 
     loadDynamicUsers().then(() => {
+    function onGcalClick() {
+      var dd = document.getElementById('gcalDropdown');
+      if (dd.classList.contains('open')) {
+        dd.classList.remove('open');
+        dd.innerHTML = '';
+        return;
+      }
+      var token = localStorage.getItem('gcalToken');
+      if (token) {
+        fetchGcalEvents(token);
+      } else {
+        document.getElementById('gcalDialog').classList.add('active');
+      }
+    }
+
+    function dismissGcalDialog() {
+      document.getElementById('gcalDialog').classList.remove('active');
+    }
+
+    async function connectGcal() {
+      dismissGcalDialog();
+      try {
+        var res = await fetch('/api/gcal-config');
+        var data = await res.json();
+        var clientId = data.clientId;
+        if (!clientId) return;
+        var client = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'https://www.googleapis.com/auth/calendar.readonly',
+          callback: function(resp) {
+            if (resp.access_token) {
+              localStorage.setItem('gcalToken', resp.access_token);
+              fetchGcalEvents(resp.access_token);
+            }
+          }
+        });
+        client.requestAccessToken();
+      } catch (e) {}
+    }
+
+    async function fetchGcalEvents(token) {
+      try {
+        var now = new Date().toISOString();
+        var url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=' + encodeURIComponent(now) + '&maxResults=10&orderBy=startTime&singleEvents=true';
+        var res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+        if (res.status === 401) {
+          localStorage.removeItem('gcalToken');
+          document.getElementById('gcalDialog').classList.add('active');
+          return;
+        }
+        var data = await res.json();
+        var events = data.items || [];
+        showGcalDropdown(events);
+      } catch (e) {}
+    }
+
+    function showGcalDropdown(events) {
+      var dd = document.getElementById('gcalDropdown');
+      dd.innerHTML = '';
+      if (events.length === 0) {
+        dd.innerHTML = '<div class="gcal-dropdown-item">NO UPCOMING EVENTS</div>';
+        dd.classList.add('open');
+        return;
+      }
+      for (var i = 0; i < events.length; i++) {
+        (function(ev) {
+          var item = document.createElement('div');
+          item.className = 'gcal-dropdown-item';
+          var name = (ev.summary || 'UNTITLED').toUpperCase();
+          var dateStr = '';
+          if (ev.start) {
+            var d = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
+            dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
+          }
+          item.innerHTML = '<div>' + name + '</div><div class="gcal-dropdown-item-date">' + dateStr + '</div>';
+          item.onclick = function() { selectGcalEvent(ev); };
+          dd.appendChild(item);
+        })(events[i]);
+      }
+      dd.classList.add('open');
+    }
+
+    function selectGcalEvent(ev) {
+      document.getElementById('eEvent').value = (ev.summary || '').toUpperCase();
+      if (ev.start) {
+        var d = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date + 'T00:00:00');
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        document.getElementById('eDate').value = mm + '/' + dd + '/' + d.getFullYear();
+      }
+      if (ev.location) {
+        document.getElementById('eLocation').value = ev.location.toUpperCase();
+      }
+      document.getElementById('gcalDropdown').classList.remove('open');
+      document.getElementById('gcalDropdown').innerHTML = '';
+    }
+
     initLogin();
     if (currentUser) {
       showSite();
