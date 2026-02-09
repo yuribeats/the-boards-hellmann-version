@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/login", "destination": "/index.html" },
     { "source": "/submit", "destination": "/index.html" },
     { "source": "/submit-news", "destination": "/index.html" },
     { "source": "/submit-event", "destination": "/index.html" },

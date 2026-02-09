@@ -1,5 +1,5 @@
-const REPO = 'yuribeats/the-boards';
-const FILE_PATH = 'data/pending-news.json';
+const REPO = 'yuribeats/the-boards-hellmann-version';
+const FILE_PATH = 'data/news.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -23,7 +23,6 @@ export default async function handler(req, res) {
 
     const submission = {
       id,
-      type: 'news',
       source: 'community',
       author: author || '',
       title: title || '',
@@ -45,7 +44,7 @@ export default async function handler(req, res) {
       if (imgResp.ok) submission.image = filename;
     }
 
-    let pending = [];
+    let news = [];
     let sha = null;
     try {
       const resp = await fetch(
@@ -54,16 +53,16 @@ export default async function handler(req, res) {
       );
       if (resp.ok) {
         const data = await resp.json();
-        pending = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+        news = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
         sha = data.sha;
       }
     } catch {}
 
-    pending.push(submission);
+    news.push(submission);
 
     const putBody = {
-      message: 'Add pending news submission',
-      content: Buffer.from(JSON.stringify(pending, null, 2)).toString('base64'),
+      message: 'Add news: ' + (title || 'untitled'),
+      content: Buffer.from(JSON.stringify(news, null, 2)).toString('base64'),
       branch: BRANCH
     };
     if (sha) putBody.sha = sha;
@@ -76,7 +75,7 @@ export default async function handler(req, res) {
         body: JSON.stringify(putBody)
       }
     );
-    if (!resp.ok) throw new Error('Failed to write pending-news.json');
+    if (!resp.ok) throw new Error('Failed to write news.json');
 
     return res.status(200).json({ success: true });
   } catch (err) {

@@ -1,5 +1,5 @@
-const REPO = 'yuribeats/the-boards';
-const FILE_PATH = 'data/pending-events.json';
+const REPO = 'yuribeats/the-boards-hellmann-version';
+const FILE_PATH = 'data/events.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { event, shortName, date, location, contact, site, image, imageExt, repeatWeekly, repeatMonthly, publishToNews } = req.body;
+    const { event, author, shortName, date, location, contact, site, image, imageExt, repeatWeekly, repeatMonthly } = req.body;
     if (!event || !date) return res.status(400).json({ error: 'Event name and date are required' });
 
     const now = new Date();
@@ -23,8 +23,8 @@ export default async function handler(req, res) {
 
     const submission = {
       id,
-      type: 'event',
       event: event || '',
+      author: author || '',
       shortName: shortName || '',
       date: date || '',
       location: location || '',
@@ -32,8 +32,7 @@ export default async function handler(req, res) {
       site: site || '',
       repeatWeekly: !!repeatWeekly,
       repeatMonthly: !!repeatMonthly,
-      submitted: submittedStr,
-      publishToNews: !!publishToNews
+      submitted: submittedStr
     };
 
     if (image && imageExt) {
@@ -50,7 +49,7 @@ export default async function handler(req, res) {
       if (imgResp.ok) submission.image = filename;
     }
 
-    let pending = [];
+    let events = [];
     let sha = null;
     try {
       const resp = await fetch(
@@ -59,16 +58,16 @@ export default async function handler(req, res) {
       );
       if (resp.ok) {
         const data = await resp.json();
-        pending = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+        events = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
         sha = data.sha;
       }
     } catch {}
 
-    pending.push(submission);
+    events.push(submission);
 
     const putBody = {
-      message: 'Add pending event submission',
-      content: Buffer.from(JSON.stringify(pending, null, 2)).toString('base64'),
+      message: 'Add event: ' + event,
+      content: Buffer.from(JSON.stringify(events, null, 2)).toString('base64'),
       branch: BRANCH
     };
     if (sha) putBody.sha = sha;
@@ -81,7 +80,7 @@ export default async function handler(req, res) {
         body: JSON.stringify(putBody)
       }
     );
-    if (!resp.ok) throw new Error('Failed to write pending-events.json');
+    if (!resp.ok) throw new Error('Failed to write events.json');
 
     return res.status(200).json({ success: true });
   } catch (err) {

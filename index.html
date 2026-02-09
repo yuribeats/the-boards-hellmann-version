@@ -567,6 +567,47 @@
       font-size: 14px;
     }
 
+    .login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 24px 0;
+    }
+    .login-screen .custom-select { margin-bottom: 16px; }
+    .login-screen .submit-btn { margin-top: 0; }
+
+    .site-content { display: none; }
+    .site-content.active { display: block; }
+
+    .attend-section { padding: 12px 0; }
+    .attend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .guest-list { padding: 12px 0; }
+    .guest-list-title {
+      font-size: 11px;
+      opacity: 0.5;
+      margin-bottom: 8px;
+    }
+    .guest-item {
+      font-size: 13px;
+      font-weight: 900;
+      padding: 4px 0;
+    }
+    .guest-kids {
+      font-size: 11px;
+      opacity: 0.6;
+      margin-left: 6px;
+    }
+
     @media (max-width: 768px) {
       body { padding: 12px; }
       h1 { font-size: 18px; letter-spacing: 4px; }
@@ -594,19 +635,35 @@
   </style>
 </head>
 <body>
+  <div id="loginScreen">
+    <div class="header" style="margin-bottom:0">
+      <h1>HELLMANN HARPER RYBAK</h1>
+    </div>
+    <hr class="separator">
+    <div class="login-screen">
+      <div class="custom-select" id="loginSelect">
+        <div class="custom-select-trigger" onclick="document.getElementById('loginSelect').classList.toggle('open')">SELECT YOUR NAME</div>
+        <div class="custom-select-options" id="loginOptions"></div>
+      </div>
+      <button class="submit-btn" id="loginBtn" onclick="doLogin()">ENTER</button>
+    </div>
+  </div>
+
+  <div class="site-content" id="siteContent">
   <div class="burger" id="burger" onclick="toggleMenu()">
     <span></span><span></span><span></span>
   </div>
   <div class="menu-overlay" id="menu">
-    <a href="/" id="menuTable" onclick="event.preventDefault();navigate('table')" style="display:none">BOARDS</a>
+    <a href="/" id="menuTable" onclick="event.preventDefault();navigate('table')" style="display:none">VENDORS</a>
     <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')">&#9733;</a>
-    <a href="/" id="menuAll" onclick="event.preventDefault();navigate('table')" style="display:none">ALL</a>
+    <a href="/" id="menuAll" onclick="event.preventDefault();navigate('table')" style="display:none">VENDORS</a>
     <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')">NEWS</a>
     <a href="/events" id="menuEvents" onclick="event.preventDefault();navigate('events')">EVENTS</a>
     <a href="javascript:void(0)" id="menuSubmit" onclick="event.stopPropagation();toggleSubmitMenu()" class="menu-divider">SUBMIT</a>
+    <a href="javascript:void(0)" id="menuLogout" onclick="doLogout()" class="menu-divider">LOGOUT</a>
   </div>
   <div class="menu-overlay" id="submitMenu">
-    <a href="/submit" onclick="event.preventDefault();navigate('submit')">SERVICE</a>
+    <a href="/submit" onclick="event.preventDefault();navigate('submit')">VENDOR</a>
     <a href="/submit-news" onclick="event.preventDefault();navigate('submit-news')">NEWS</a>
     <a href="/submit-event" onclick="event.preventDefault();navigate('submit-event')">EVENT</a>
   </div>
@@ -651,8 +708,6 @@
     <div class="submit-msg" id="submitMsg"></div>
   </div>
   <div class="submit-form" id="newsSubmitForm">
-    <label>AUTHOR</label>
-    <input type="text" id="nAuthor" placeholder="YOUR NAME">
     <label>TITLE</label>
     <input type="text" id="nTitle" placeholder="NEWS TITLE">
     <label>BODY</label>
@@ -715,7 +770,7 @@
     <div class="submit-msg" id="eventSubmitMsg"></div>
   </div>
   <div class="submit-modal" id="submitModal" onclick="submitModal.classList.remove('active'); switchMode('table');">
-    <div class="submit-modal-box">THANK YOU. SUBMISSIONS ARE APPROVED MANUALLY. YOUR SUBMISSION SHOULD BE LIVE IN A FEW DAYS.</div>
+    <div class="submit-modal-box">THANK YOU. YOUR SUBMISSION IS NOW LIVE.</div>
   </div>
   <div class="service-dropdown" id="serviceDropdown"></div>
   <div class="table-wrapper" id="tableWrapper">
@@ -727,17 +782,69 @@
   </div>
   <div class="starred-news-wrap" id="starredEventsWrap"></div>
   <div class="starred-news-wrap" id="starredNewsWrap"></div>
+  </div>
 
   <script>
+    const USERS = ['JASON HELLMANN','HALEY HELLMANN','ROBIN HARPER HELLMANN','DAVID HARPER HELLMANN','TONI HELLMANN','YURI RYBAK','RONNE HELLMANN','JERRY HELLMANN','BILL RYBAK','CATHY RYBAK'];
+    const CHILDREN = {
+      'JASON HELLMANN': ['LOUIE HELLMANN', 'ELI HELLMANN'],
+      'HALEY HELLMANN': ['LOUIE HELLMANN', 'ELI HELLMANN'],
+      'YURI RYBAK': ['ZOE HELLMANN RYBAK'],
+      'TONI HELLMANN': ['ZOE HELLMANN RYBAK'],
+      'ROBIN HARPER HELLMANN': ['LUCY HARPER HELLMANN'],
+      'DAVID HARPER HELLMANN': ['LUCY HARPER HELLMANN']
+    };
+    let currentUser = localStorage.getItem('currentUser') || '';
+
+    function initLogin() {
+      const opts = document.getElementById('loginOptions');
+      opts.innerHTML = '';
+      for (const name of USERS) {
+        const div = document.createElement('div');
+        div.className = 'custom-select-option';
+        div.textContent = name;
+        div.addEventListener('click', () => {
+          document.querySelector('#loginSelect .custom-select-trigger').textContent = name;
+          document.getElementById('loginSelect').classList.remove('open');
+          document.getElementById('loginSelect').dataset.value = name;
+        });
+        opts.appendChild(div);
+      }
+    }
+
+    function doLogin() {
+      const val = document.getElementById('loginSelect').dataset.value;
+      if (!val) return;
+      currentUser = val;
+      localStorage.setItem('currentUser', currentUser);
+      showSite();
+    }
+
+    function doLogout() {
+      currentUser = '';
+      localStorage.removeItem('currentUser');
+      document.getElementById('menu').classList.remove('open');
+      document.getElementById('siteContent').classList.remove('active');
+      document.getElementById('loginScreen').style.display = '';
+      document.querySelector('#loginSelect .custom-select-trigger').textContent = 'SELECT YOUR NAME';
+      delete document.getElementById('loginSelect').dataset.value;
+    }
+
+    function showSite() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('siteContent').classList.add('active');
+      if (!rows.length) load();
+    }
+
     let rows = [];
     let columns = [];
     let sortCol = 'date uploaded';
     let sortAsc = false;
     let showStarred = false;
     let serviceFilter = null;
-    const VISIBLE_COLS = ['service', 'name', 'site', 'date uploaded', 'description'];
-    const PROFILE_COLS = ['name', 'service', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
-    const COL_DISPLAY = { 'service': 'SERVICE TYPE', 'date uploaded': 'ADDED' };
+    const VISIBLE_COLS = ['service', 'name', 'author', 'site', 'date uploaded', 'description'];
+    const PROFILE_COLS = ['name', 'service', 'author', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
+    const COL_DISPLAY = { 'service': 'SERVICE TYPE', 'date uploaded': 'ADDED', 'author': 'ADDED BY' };
 
     function getStarred() {
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
@@ -882,6 +989,10 @@
       if (sm.classList.contains('open') && !sm.contains(e.target) && e.target !== submitLink) {
         sm.classList.remove('open');
       }
+      const ls = document.getElementById('loginSelect');
+      if (ls && ls.classList.contains('open') && !ls.contains(e.target)) {
+        ls.classList.remove('open');
+      }
     });
 
     function toggleSubmitMenu() {
@@ -998,7 +1109,7 @@
       if (row.image) {
         const img = document.createElement('img');
         img.className = 'profile-image';
-        img.src = 'https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + row.image;
+        img.src = 'https://raw.githubusercontent.com/yuribeats/the-boards-hellmann-version/main/data/images/' + row.image;
         img.alt = row.name || '';
         profile.appendChild(img);
       }
@@ -1261,6 +1372,7 @@
         const payload = {
           service,
           name,
+          author: currentUser,
           site: document.getElementById('fSite').value.trim(),
           phone: document.getElementById('fPhone').value.trim(),
           email: document.getElementById('fEmail').value.trim(),
@@ -1336,7 +1448,7 @@
 
       try {
         const payload = {
-          author: document.getElementById('nAuthor').value.trim(),
+          author: currentUser,
           title: document.getElementById('nTitle').value.trim(),
           body
         };
@@ -1354,7 +1466,6 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
-        document.getElementById('nAuthor').value = '';
         document.getElementById('nTitle').value = '';
         document.getElementById('nBody').value = '';
         document.getElementById('nImage').value = '';
@@ -1399,7 +1510,7 @@
       });
       div.appendChild(starSpan);
       let html = '';
-      if (p.image) html += '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + escapeHtml(p.image) + '" alt="">';
+      if (p.image) html += '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards-hellmann-version/main/data/images/' + escapeHtml(p.image) + '" alt="">';
       if (p.title) html += '<div class="news-post-title">' + parseLinks(p.title) + '</div>';
       html += '<div class="news-post-date">' + escapeHtml(p.date) + (p.author ? ' &mdash; ' + escapeHtml(p.author) : '') + '</div>';
       html += '<div class="news-post-body">' + parseLinks(p.body) + '</div>';
@@ -1661,7 +1772,7 @@
       if (ev.image) {
         const img = document.createElement('img');
         img.style.cssText = 'width:100%;max-width:500px;display:block;margin:0 auto;padding:24px 0';
-        img.src = 'https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + ev.image;
+        img.src = 'https://raw.githubusercontent.com/yuribeats/the-boards-hellmann-version/main/data/images/' + ev.image;
         img.alt = ev.event || '';
         detail.appendChild(img);
       }
@@ -1677,7 +1788,8 @@
         ['REPEATING', repeatLabel],
         ['LOCATION', ev.location],
         ['CONTACT', ev.contact],
-        ['SITE', ev.site]
+        ['SITE', ev.site],
+        ['ADDED BY', ev.author]
       ];
 
       for (const [label, val] of fields) {
@@ -1693,6 +1805,121 @@
         field.innerHTML = '<div class="event-detail-label">' + label + '</div><div class="event-detail-value">' + displayVal + '</div>';
         detail.appendChild(field);
       }
+
+      const attendSection = document.createElement('div');
+      attendSection.className = 'attend-section';
+
+      const attendRow = document.createElement('div');
+      attendRow.className = 'attend-row';
+      const attendBox = document.createElement('div');
+      attendBox.className = 'custom-check-box';
+      attendBox.id = 'attendBox';
+      const attendLabel = document.createElement('span');
+      attendLabel.textContent = 'ATTENDING';
+
+      const kidsRow = document.createElement('div');
+      kidsRow.className = 'attend-row';
+      kidsRow.style.display = 'none';
+      kidsRow.id = 'kidsRow';
+      const kidsBox = document.createElement('div');
+      kidsBox.className = 'custom-check-box small';
+      kidsBox.id = 'kidsBox';
+      const kidsLabel = document.createElement('span');
+      kidsLabel.textContent = 'WITH KIDS';
+
+      attendRow.appendChild(attendBox);
+      attendRow.appendChild(attendLabel);
+      kidsRow.appendChild(kidsBox);
+      kidsRow.appendChild(kidsLabel);
+      attendSection.appendChild(attendRow);
+      attendSection.appendChild(kidsRow);
+      detail.appendChild(attendSection);
+
+      const guestListWrap = document.createElement('div');
+      guestListWrap.className = 'guest-list';
+      guestListWrap.id = 'guestList';
+      detail.appendChild(guestListWrap);
+
+      loadAttendance(ev.id, attendBox, kidsBox, kidsRow, guestListWrap);
+
+      attendRow.addEventListener('click', () => {
+        const isChecked = !attendBox.classList.contains('checked');
+        attendBox.classList.toggle('checked');
+        attendBox.textContent = isChecked ? 'X' : '';
+        if (!isChecked) {
+          kidsBox.classList.remove('checked');
+          kidsBox.textContent = '';
+          kidsRow.style.display = 'none';
+        } else if (CHILDREN[currentUser]) {
+          kidsRow.style.display = 'flex';
+        }
+        updateAttendance(ev.id, isChecked, kidsBox.classList.contains('checked'), guestListWrap);
+      });
+
+      kidsRow.addEventListener('click', () => {
+        kidsBox.classList.toggle('checked');
+        kidsBox.textContent = kidsBox.classList.contains('checked') ? 'X' : '';
+        updateAttendance(ev.id, true, kidsBox.classList.contains('checked'), guestListWrap);
+      });
+    }
+
+    async function loadAttendance(eventId, attendBox, kidsBox, kidsRow, guestListWrap) {
+      try {
+        const res = await fetch('/api/attendance?eventId=' + encodeURIComponent(eventId));
+        const data = await res.json();
+        const attendees = data.attendees || [];
+        const me = attendees.find(a => a.name === currentUser);
+        if (me) {
+          attendBox.classList.add('checked');
+          attendBox.textContent = 'X';
+          if (CHILDREN[currentUser]) {
+            kidsRow.style.display = 'flex';
+            if (me.withKids) {
+              kidsBox.classList.add('checked');
+              kidsBox.textContent = 'X';
+            }
+          }
+        }
+        renderGuestList(attendees, guestListWrap);
+      } catch {}
+    }
+
+    function renderGuestList(attendees, wrap) {
+      wrap.innerHTML = '';
+      if (attendees.length === 0) return;
+      const title = document.createElement('div');
+      title.className = 'guest-list-title';
+      title.textContent = 'ATTENDING';
+      wrap.appendChild(title);
+      const shownKids = new Set();
+      for (const a of attendees) {
+        const item = document.createElement('div');
+        item.className = 'guest-item';
+        item.textContent = a.name;
+        wrap.appendChild(item);
+        if (a.withKids && CHILDREN[a.name]) {
+          for (const kid of CHILDREN[a.name]) {
+            if (shownKids.has(kid)) continue;
+            shownKids.add(kid);
+            const kidItem = document.createElement('div');
+            kidItem.className = 'guest-item';
+            kidItem.innerHTML = escapeHtml(kid) + '<span class="guest-kids">CHILD</span>';
+            wrap.appendChild(kidItem);
+          }
+        }
+      }
+    }
+
+    async function updateAttendance(eventId, attending, withKids, guestListWrap) {
+      try {
+        const res = await fetch('/api/attend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ eventId, username: currentUser, attending, withKids })
+        });
+        const data = await res.json();
+        if (data.attendees) renderGuestList(data.attendees, guestListWrap);
+      } catch {}
     }
 
     function handleEventFileSelect(input) {
@@ -1746,6 +1973,7 @@
       try {
         const payload = {
           event: eventName,
+          author: currentUser,
           shortName: document.getElementById('eShortName').value.trim(),
           date: parseInt(dateParts[0]) + '/' + parseInt(dateParts[1]) + '/' + eYear,
           location: document.getElementById('eLocation').value.trim(),
@@ -1826,16 +2054,20 @@
       else switchMode('table');
     });
 
-    load().then(() => {
-      const p = location.pathname;
-      if (p.startsWith('/profile/')) openProfileFromUrl();
-      else if (p === '/starred') switchMode('starred');
-      else if (p === '/submit') switchMode('submit');
-      else if (p === '/submit-news') switchMode('submit-news');
-      else if (p === '/submit-event') switchMode('submit-event');
-      else if (p === '/news') switchMode('news');
-      else if (p === '/events') switchMode('events');
-    });
+    initLogin();
+    if (currentUser) {
+      showSite();
+      load().then(() => {
+        const p = location.pathname;
+        if (p.startsWith('/profile/')) openProfileFromUrl();
+        else if (p === '/starred') switchMode('starred');
+        else if (p === '/submit') switchMode('submit');
+        else if (p === '/submit-news') switchMode('submit-news');
+        else if (p === '/submit-event') switchMode('submit-event');
+        else if (p === '/news') switchMode('news');
+        else if (p === '/events') switchMode('events');
+      });
+    }
   </script>
 </body>
 </html>

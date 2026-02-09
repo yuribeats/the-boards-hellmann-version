@@ -1,5 +1,5 @@
-const REPO = 'yuribeats/the-boards';
-const FILE_PATH = 'data/pending.json';
+const REPO = 'yuribeats/the-boards-hellmann-version';
+const FILE_PATH = 'data/approved.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { service, name, site, phone, email, neighborhood, description, image, imageExt } = req.body;
+    const { service, name, author, site, phone, email, neighborhood, description, image, imageExt } = req.body;
     if (!service || !name) return res.status(400).json({ error: 'Service and name are required' });
 
     const now = new Date();
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
       id,
       service: service || '',
       name: name || '',
+      author: author || '',
       site: site || '',
       phone: phone || '',
       email: email || '',
@@ -41,44 +42,43 @@ export default async function handler(req, res) {
       submission.image = imageFilename;
     }
 
-    const { content, sha } = await getFile(token);
-    const pending = JSON.parse(content);
-    pending.push(submission);
-    await putFile(token, pending, sha);
+    let approved = [];
+    let sha = null;
+    try {
+      const resp = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}`,
+        { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        approved = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+        sha = data.sha;
+      }
+    } catch {}
+
+    approved.push(submission);
+
+    const putBody = {
+      message: 'Add listing: ' + name,
+      content: Buffer.from(JSON.stringify(approved, null, 2)).toString('base64'),
+      branch: BRANCH
+    };
+    if (sha) putBody.sha = sha;
+
+    const resp = await fetch(
+      `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(putBody)
+      }
+    );
+    if (!resp.ok) throw new Error('Failed to write approved.json');
 
     return res.status(200).json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-}
-
-async function getFile(token) {
-  const resp = await fetch(
-    `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}`,
-    { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
-  );
-  if (!resp.ok) throw new Error('Failed to read pending.json');
-  const data = await resp.json();
-  const content = Buffer.from(data.content, 'base64').toString('utf8');
-  return { content, sha: data.sha };
-}
-
-async function putFile(token, data, sha) {
-  const body = JSON.stringify({
-    message: 'Update pending.json',
-    content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
-    sha,
-    branch: BRANCH
-  });
-  const resp = await fetch(
-    `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`,
-    {
-      method: 'PUT',
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-      body
-    }
-  );
-  if (!resp.ok) throw new Error('Failed to write pending.json');
 }
 
 async function putImage(token, path, base64Content) {

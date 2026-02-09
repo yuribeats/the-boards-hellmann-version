@@ -1,4 +1,4 @@
-const REPO = 'yuribeats/the-boards';
+const REPO = 'yuribeats/the-boards-hellmann-version';
 const NEWS_PATH = 'data/news.json';
 const BRANCH = 'main';
 

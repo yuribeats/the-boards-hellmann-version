@@ -1,3 +1,4 @@
 .vercel
 data/pending.json
 data/approved.json
+.env*.local
