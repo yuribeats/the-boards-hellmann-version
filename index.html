@@ -620,6 +620,7 @@
   <div class="profile" id="profile"></div>
   <div class="news-feed" id="newsFeed"></div>
   <div class="starred-news-wrap" id="starredNewsWrap"></div>
+  <div class="starred-news-wrap" id="starredEventsWrap"></div>
   <div class="submit-form" id="submitForm">
     <label>SERVICE TYPE</label>
     <div class="custom-select" id="fServiceSelect">
@@ -762,6 +763,18 @@
       const i = s.indexOf(id);
       if (i >= 0) s.splice(i, 1); else s.push(id);
       setStarredNews(s);
+    }
+
+    function getStarredEvents() {
+      try { return JSON.parse(localStorage.getItem('starredEvents') || '[]'); } catch { return []; }
+    }
+    function setStarredEvents(arr) { localStorage.setItem('starredEvents', JSON.stringify(arr)); }
+    function isEventStarred(id) { return getStarredEvents().includes(id); }
+    function toggleEventStar(id) {
+      const s = getStarredEvents();
+      const i = s.indexOf(id);
+      if (i >= 0) s.splice(i, 1); else s.push(id);
+      setStarredEvents(s);
     }
 
     async function load() {
@@ -1045,6 +1058,8 @@
       document.getElementById('newsFeed').classList.remove('active');
       document.getElementById('starredNewsWrap').classList.remove('active');
       document.getElementById('starredNewsWrap').innerHTML = '';
+      document.getElementById('starredEventsWrap').classList.remove('active');
+      document.getElementById('starredEventsWrap').innerHTML = '';
       document.getElementById('calendarWrap').classList.remove('active');
       document.getElementById('eventDetail').classList.remove('active');
       document.getElementById('eventDetail').innerHTML = '';
@@ -1143,6 +1158,7 @@
         updateMenuDividers();
         render();
         loadStarredNews();
+        loadStarredEvents();
         return;
       }
 
@@ -1419,6 +1435,46 @@
       } catch {}
     }
 
+    async function loadStarredEvents() {
+      const wrap = document.getElementById('starredEventsWrap');
+      const starred = getStarredEvents();
+      if (starred.length === 0) { wrap.classList.remove('active'); return; }
+      try {
+        const res = await fetch('/api/events');
+        const data = await res.json();
+        const events = (data.events || []).filter(e => starred.includes(e.id));
+        if (events.length === 0) { wrap.classList.remove('active'); return; }
+        wrap.innerHTML = '<div style="font-size:14px;font-weight:900;padding:16px 0 0;text-align:center">STARRED EVENTS</div>';
+        wrap.classList.add('active');
+        for (const ev of events) {
+          const card = document.createElement('div');
+          card.className = 'news-post';
+          const starSpan = document.createElement('span');
+          starSpan.className = 'news-post-star';
+          starSpan.textContent = '\u2605';
+          starSpan.addEventListener('click', () => {
+            toggleEventStar(ev.id);
+            card.remove();
+            if (!wrap.querySelector('.news-post')) { wrap.classList.remove('active'); wrap.innerHTML = ''; }
+          });
+          card.appendChild(starSpan);
+          let html = '<div class="news-post-title">' + escapeHtml(ev.event || '') + '</div>';
+          html += '<div class="news-post-date">' + escapeHtml(ev.date || '') + (ev.location ? ' &mdash; ' + escapeHtml(ev.location) : '') + '</div>';
+          if (ev.contact) html += '<div class="news-post-body">' + escapeHtml(ev.contact) + '</div>';
+          const parts = (ev.date || '').split('/');
+          if (parts.length === 3) {
+            const m = parseInt(parts[0]);
+            const y = parseInt(parts[2]);
+            html += '<a class="news-post-calendar-link" href="/events?m=' + m + '&y=' + y + '" onclick="event.preventDefault();goToEventMonth(' + m + ',' + y + ')">VIEW ON CALENDAR</a>';
+          }
+          const inner = document.createElement('div');
+          inner.innerHTML = html;
+          while (inner.firstChild) card.appendChild(inner.firstChild);
+          wrap.appendChild(card);
+        }
+      } catch {}
+    }
+
     let calendarEvents = [];
     let calendarYear = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();
@@ -1574,6 +1630,8 @@
       detail.classList.add('active');
       detail.innerHTML = '';
 
+      const topRow = document.createElement('div');
+      topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
       const back = document.createElement('div');
       back.className = 'event-detail-back';
       back.innerHTML = '<span style="display:inline-block;transform:translateY(-1px)">\u2190</span> BACK';
@@ -1582,7 +1640,16 @@
         detail.innerHTML = '';
         document.getElementById('calendarWrap').classList.add('active');
       });
-      detail.appendChild(back);
+      topRow.appendChild(back);
+      const star = document.createElement('span');
+      star.style.cssText = 'font-size:22px;cursor:default;user-select:none';
+      star.textContent = isEventStarred(ev.id) ? '\u2605' : '\u2606';
+      star.addEventListener('click', () => {
+        toggleEventStar(ev.id);
+        star.textContent = isEventStarred(ev.id) ? '\u2605' : '\u2606';
+      });
+      topRow.appendChild(star);
+      detail.appendChild(topRow);
 
       if (ev.image) {
         const img = document.createElement('img');
