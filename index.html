@@ -1407,6 +1407,13 @@
             a.style.color = '#000';
             a.style.fontWeight = '900';
             td.appendChild(a);
+          } else if (col === 'phone' && row[col]) {
+            const a = document.createElement('a');
+            a.href = 'tel:' + row[col].replace(/[^+\d]/g, '');
+            a.textContent = row[col];
+            a.style.color = '#000';
+            a.style.fontWeight = '900';
+            td.appendChild(a);
           } else {
             td.textContent = col === 'author' ? firstName(row[col]) : (row[col] || '');
           }
@@ -1467,6 +1474,8 @@
           let href = val;
           if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
           displayVal = '<a href="' + href + '" target="_blank" style="color:#000;font-weight:900">' + val + '</a>';
+        } else if (col === 'phone') {
+          displayVal = '<a href="tel:' + val.replace(/[^+\d]/g, '') + '" style="color:#000;font-weight:900">' + escapeHtml(val) + '</a>';
         }
         field.innerHTML = '<div class="profile-label">' + (COL_DISPLAY[col] || col.toUpperCase()) + '</div><div class="profile-value">' + displayVal + '</div>';
         profile.appendChild(field);
