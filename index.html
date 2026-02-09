@@ -753,10 +753,6 @@
     <label>IMAGE</label>
     <input type="file" id="fImage" class="file-upload-input" accept="image/*" onchange="handleFileSelect(this)">
     <label for="fImage" class="file-upload-label" id="fImageLabel">CHOOSE IMAGE</label>
-    <div class="custom-check" onclick="var b=document.getElementById('fVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
-      <div class="custom-check-box" id="fVerify"></div>
-      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTER HERE WILL BE POSTED PUBLICLY</span>
-    </div>
     <button class="submit-btn" id="submitBtn" onclick="submitListing()">SUBMIT</button>
     <div class="submit-msg" id="submitMsg"></div>
   </div>
@@ -768,10 +764,6 @@
     <label>IMAGE</label>
     <input type="file" id="nImage" class="file-upload-input" accept="image/*" onchange="handleNewsFileSelect(this)">
     <label for="nImage" class="file-upload-label" id="nImageLabel">CHOOSE IMAGE</label>
-    <div class="custom-check" onclick="var b=document.getElementById('nVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
-      <div class="custom-check-box" id="nVerify"></div>
-      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTER HERE WILL BE POSTED PUBLICLY</span>
-    </div>
     <button class="submit-btn" id="newsSubmitBtn" onclick="submitNews()">SUBMIT</button>
     <div class="submit-msg" id="newsSubmitMsg"></div>
   </div>
@@ -814,10 +806,6 @@
     <div class="custom-check" style="align-items:center" onclick="var b=document.getElementById('ePublishNews');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
       <div class="custom-check-box small" id="ePublishNews"></div>
       <span>PUBLISH TO NEWS FEED</span>
-    </div>
-    <div class="custom-check" onclick="var b=document.getElementById('eVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
-      <div class="custom-check-box" id="eVerify"></div>
-      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTER HERE WILL BE POSTED PUBLICLY</span>
     </div>
     <button class="submit-btn" id="eventSubmitBtn" onclick="submitEvent()">SUBMIT</button>
     <div class="submit-msg" id="eventSubmitMsg"></div>
@@ -1409,11 +1397,6 @@
         return;
       }
 
-      if (!document.getElementById('fVerify').classList.contains('checked')) {
-        msg.textContent = 'PLEASE VERIFY THE CHECKBOX';
-        return;
-      }
-
       btn.disabled = true;
       btn.textContent = 'SUBMITTING...';
       msg.textContent = '';
@@ -1445,8 +1428,6 @@
         });
         if (!res.ok) throw new Error('Failed');
         selectService('');
-        document.getElementById('fVerify').classList.remove('checked');
-        document.getElementById('fVerify').textContent = '';
         document.getElementById('fName').value = '';
         document.getElementById('fSite').value = '';
         document.getElementById('fPhone').value = '';
@@ -1487,11 +1468,6 @@
         return;
       }
 
-      if (!document.getElementById('nVerify').classList.contains('checked')) {
-        msg.textContent = 'PLEASE VERIFY THE CHECKBOX';
-        return;
-      }
-
       btn.disabled = true;
       btn.textContent = 'SUBMITTING...';
       msg.textContent = '';
@@ -1521,8 +1497,6 @@
         document.getElementById('nImage').value = '';
         document.getElementById('nImageLabel').textContent = 'CHOOSE IMAGE';
         document.getElementById('nImageLabel').classList.remove('has-file');
-        document.getElementById('nVerify').classList.remove('checked');
-        document.getElementById('nVerify').textContent = '';
         btn.disabled = false;
         btn.textContent = 'SUBMIT';
         document.getElementById('submitModal').classList.add('active');
@@ -2012,11 +1986,6 @@
         return;
       }
 
-      if (!document.getElementById('eVerify').classList.contains('checked')) {
-        msg.textContent = 'PLEASE VERIFY THE CHECKBOX';
-        return;
-      }
-
       btn.disabled = true;
       btn.textContent = 'SUBMITTING...';
       msg.textContent = '';
@@ -2057,8 +2026,6 @@
         document.getElementById('eImage').value = '';
         document.getElementById('eImageLabel').textContent = 'CHOOSE IMAGE';
         document.getElementById('eImageLabel').classList.remove('has-file');
-        document.getElementById('eVerify').classList.remove('checked');
-        document.getElementById('eVerify').textContent = '';
         document.getElementById('ePublishNews').classList.remove('checked');
         document.getElementById('ePublishNews').textContent = '';
         document.getElementById('eRepeatWeekly').classList.remove('checked');
