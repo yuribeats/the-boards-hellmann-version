@@ -14,22 +14,32 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { service, name, site, phone, email, neighborhood } = req.body;
+    const { service, name, site, phone, email, neighborhood, description, image, imageExt } = req.body;
     if (!service || !name) return res.status(400).json({ error: 'Service and name are required' });
 
     const now = new Date();
     const dateUploaded = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+    const id = Date.now().toString();
 
     const submission = {
-      id: Date.now().toString(),
+      id,
       service: service || '',
       name: name || '',
       site: site || '',
       phone: phone || '',
       email: email || '',
       'date uploaded': dateUploaded,
-      neighborhood: neighborhood || ''
+      neighborhood: neighborhood || '',
+      description: description || ''
     };
+
+    if (image && imageExt) {
+      const ext = imageExt.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'jpg';
+      const imageFilename = id + '.' + ext;
+      const imagePath = 'data/images/' + imageFilename;
+      await putImage(token, imagePath, image);
+      submission.image = imageFilename;
+    }
 
     const { content, sha } = await getFile(token);
     const pending = JSON.parse(content);
@@ -69,4 +79,21 @@ async function putFile(token, data, sha) {
     }
   );
   if (!resp.ok) throw new Error('Failed to write pending.json');
+}
+
+async function putImage(token, path, base64Content) {
+  const body = JSON.stringify({
+    message: 'Add image ' + path,
+    content: base64Content,
+    branch: BRANCH
+  });
+  const resp = await fetch(
+    `https://api.github.com/repos/${REPO}/contents/${path}`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body
+    }
+  );
+  if (!resp.ok) throw new Error('Failed to upload image');
 }

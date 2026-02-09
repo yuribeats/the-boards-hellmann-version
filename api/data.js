@@ -50,6 +50,8 @@ export default async function handler(req, res) {
       for (const col of columns) {
         row[col] = item[col] || '';
       }
+      if (item.image) row.image = item.image;
+      if (item.description) row.description = item.description;
       const dateVal = row['date uploaded'] || row['date'] || '';
       if (dateVal && isMoreRecent(dateVal, lastUpdated)) {
         lastUpdated = dateVal;

@@ -203,6 +203,43 @@
       width: 100%;
     }
     .submit-form input::placeholder { color: #999; }
+    .submit-form textarea {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+      width: 100%;
+      resize: vertical;
+      min-height: 80px;
+    }
+    .submit-form textarea::placeholder { color: #999; }
+    .file-upload-label {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+      width: 100%;
+      display: block;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      color: #000;
+    }
+    .file-upload-label:hover { background: #000; color: #fff; }
+    .file-upload-label.has-file { background: #000; color: #fff; }
+    .file-upload-input { display: none; }
+    .profile-image {
+      width: 100%;
+      max-width: 500px;
+      display: block;
+      margin: 0 auto 0;
+      border-bottom: 2px solid #000;
+      padding: 24px 0;
+    }
     .submit-btn {
       font-family: Arial, Helvetica, sans-serif;
       font-weight: 900;
@@ -342,7 +379,7 @@
   <div class="profile" id="profile"></div>
   <div class="image-feed" id="imageFeed"></div>
   <div class="submit-form" id="submitForm">
-    <label>SERVICE</label>
+    <label>SERVICE TYPE</label>
     <input type="text" id="fService" placeholder="SERVICE TYPE">
     <label>NAME</label>
     <input type="text" id="fName" placeholder="YOUR NAME">
@@ -356,6 +393,11 @@
     <input type="text" id="fDate" placeholder="" readonly>
     <label>NEIGHBORHOOD</label>
     <input type="text" id="fNeighborhood" placeholder="NEIGHBORHOOD">
+    <label>DESCRIPTION</label>
+    <textarea id="fDescription" placeholder="DESCRIBE YOUR BUSINESS OR SERVICE"></textarea>
+    <label>IMAGE</label>
+    <input type="file" id="fImage" class="file-upload-input" accept="image/*" onchange="handleFileSelect(this)">
+    <label for="fImage" class="file-upload-label" id="fImageLabel">CHOOSE IMAGE</label>
     <button class="submit-btn" id="submitBtn" onclick="submitListing()">SUBMIT</button>
     <div class="submit-msg" id="submitMsg"></div>
   </div>
@@ -379,7 +421,8 @@
     let showStarred = false;
     let serviceFilter = null;
     const VISIBLE_COLS = ['service', 'name', 'site'];
-    const PROFILE_COLS = ['name', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
+    const PROFILE_COLS = ['name', 'service', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
+    const COL_DISPLAY = { 'service': 'SERVICE TYPE' };
 
     function getStarred() {
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
@@ -433,7 +476,7 @@
       VISIBLE_COLS.forEach(col => {
         const th = document.createElement('th');
         th.dataset.col = col;
-        th.textContent = col.toUpperCase();
+        th.textContent = COL_DISPLAY[col] || col.toUpperCase();
         const arrow = document.createElement('span');
         arrow.className = 'sort-arrow';
         th.appendChild(arrow);
@@ -572,12 +615,20 @@
       });
       profile.appendChild(back);
 
+      if (row.image) {
+        const img = document.createElement('img');
+        img.className = 'profile-image';
+        img.src = 'https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + row.image;
+        img.alt = row.name || '';
+        profile.appendChild(img);
+      }
+
       PROFILE_COLS.forEach(col => {
         const val = row[col];
         if (!val) return;
         const field = document.createElement('div');
         field.className = 'profile-field';
-        field.innerHTML = '<div class="profile-label">' + col.toUpperCase() + '</div><div class="profile-value">' + val + '</div>';
+        field.innerHTML = '<div class="profile-label">' + (COL_DISPLAY[col] || col.toUpperCase()) + '</div><div class="profile-value">' + val + '</div>';
         profile.appendChild(field);
       });
     }
@@ -680,6 +731,26 @@
       updateMenuDividers();
     }
 
+    function handleFileSelect(input) {
+      const label = document.getElementById('fImageLabel');
+      if (input.files && input.files[0]) {
+        label.textContent = input.files[0].name.toUpperCase();
+        label.classList.add('has-file');
+      } else {
+        label.textContent = 'CHOOSE IMAGE';
+        label.classList.remove('has-file');
+      }
+    }
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     async function submitListing() {
       const btn = document.getElementById('submitBtn');
       const msg = document.getElementById('submitMsg');
@@ -696,17 +767,28 @@
       msg.textContent = '';
 
       try {
+        const payload = {
+          service,
+          name,
+          site: document.getElementById('fSite').value.trim(),
+          phone: document.getElementById('fPhone').value.trim(),
+          email: document.getElementById('fEmail').value.trim(),
+          neighborhood: document.getElementById('fNeighborhood').value.trim(),
+          description: document.getElementById('fDescription').value.trim()
+        };
+
+        const fileInput = document.getElementById('fImage');
+        if (fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          payload.image = await readFileAsBase64(file);
+          const ext = file.name.split('.').pop().toLowerCase();
+          payload.imageExt = ext || 'jpg';
+        }
+
         const res = await fetch('/api/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            service,
-            name,
-            site: document.getElementById('fSite').value.trim(),
-            phone: document.getElementById('fPhone').value.trim(),
-            email: document.getElementById('fEmail').value.trim(),
-            neighborhood: document.getElementById('fNeighborhood').value.trim()
-          })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
         document.getElementById('fService').value = '';
@@ -715,6 +797,10 @@
         document.getElementById('fPhone').value = '';
         document.getElementById('fEmail').value = '';
         document.getElementById('fNeighborhood').value = '';
+        document.getElementById('fDescription').value = '';
+        document.getElementById('fImage').value = '';
+        document.getElementById('fImageLabel').textContent = 'CHOOSE IMAGE';
+        document.getElementById('fImageLabel').classList.remove('has-file');
         btn.disabled = false;
         btn.textContent = 'SUBMIT';
         document.getElementById('submitModal').classList.add('active');

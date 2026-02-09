@@ -54,6 +54,7 @@
     }
     .card-field { margin-bottom: 8px; font-size: 13px; }
     .card-label { font-size: 11px; opacity: 0.5; }
+    .card-image { width: 100%; max-width: 300px; display: block; margin: 8px 0; }
     .card-actions { margin-top: 12px; display: flex; gap: 8px; }
     .empty { text-align: center; padding: 60px 0; font-size: 16px; }
     .error { text-align: center; padding: 16px; color: red; font-size: 14px; }
@@ -94,7 +95,8 @@
 
   <script>
     let adminPassword = '';
-    const FIELDS = ['service', 'name', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
+    const FIELDS = ['service', 'name', 'site', 'phone', 'email', 'date uploaded', 'neighborhood', 'description'];
+    const FIELD_DISPLAY = { 'service': 'SERVICE TYPE' };
 
     async function login() {
       adminPassword = document.getElementById('passwordInput').value;
@@ -142,9 +144,12 @@
           const card = document.createElement('div');
           card.className = 'card';
           let html = '';
+          if (item.image) {
+            html += '<img class="card-image" src="https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + escapeHtml(item.image) + '" alt="SUBMISSION IMAGE">';
+          }
           for (const f of FIELDS) {
             if (item[f]) {
-              html += '<div class="card-field"><span class="card-label">' + f.toUpperCase() + ': </span>' + escapeHtml(item[f]) + '</div>';
+              html += '<div class="card-field"><span class="card-label">' + (FIELD_DISPLAY[f] || f.toUpperCase()) + ': </span>' + escapeHtml(item[f]) + '</div>';
             }
           }
           html += '<div class="card-actions">';
