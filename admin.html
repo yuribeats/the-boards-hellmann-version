@@ -267,13 +267,33 @@
         });
         const data = await res.json();
         const pending = data.pending || [];
+        const pendingNews = data.pendingNews || [];
 
-        if (pending.length === 0) {
+        if (pending.length === 0 && pendingNews.length === 0) {
           list.innerHTML = '<div class="empty">NO PENDING SUBMISSIONS</div>';
           return;
         }
 
         list.innerHTML = '';
+
+        for (const item of pendingNews) {
+          const card = document.createElement('div');
+          card.className = 'card';
+          let html = '<div class="card-field"><span class="card-label">TYPE: </span>NEWS SUBMISSION</div>';
+          if (item.image) {
+            html += '<img class="card-image" src="https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + escapeHtml(item.image) + '" alt="">';
+          }
+          if (item.title) html += '<div class="card-field"><span class="card-label">TITLE: </span>' + escapeHtml(item.title) + '</div>';
+          if (item.body) html += '<div class="card-field"><span class="card-label">BODY: </span>' + escapeHtml(item.body) + '</div>';
+          if (item.date) html += '<div class="card-field"><span class="card-label">DATE: </span>' + escapeHtml(item.date) + '</div>';
+          html += '<div class="card-actions">';
+          html += '<button class="btn" onclick="handleAction(\'' + item.id + '\', \'approve\', this, \'news\')">APPROVE</button>';
+          html += '<button class="btn btn-reject" onclick="handleAction(\'' + item.id + '\', \'reject\', this, \'news\')">REJECT</button>';
+          html += '</div>';
+          card.innerHTML = html;
+          list.appendChild(card);
+        }
+
         for (const item of pending) {
           const card = document.createElement('div');
           card.className = 'card';
@@ -304,18 +324,20 @@
       }
     }
 
-    async function handleAction(id, action, btn) {
+    async function handleAction(id, action, btn, type) {
       btn.disabled = true;
       btn.textContent = action === 'approve' ? 'APPROVING...' : 'REJECTING...';
 
       try {
+        const payload = { id, action };
+        if (type) payload.type = type;
         const res = await fetch('/api/approve', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-admin-password': adminPassword
           },
-          body: JSON.stringify({ id, action })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
         loadPending();

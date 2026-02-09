@@ -465,7 +465,11 @@
     <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')">&#9733;</a>
     <a href="/" id="menuAll" onclick="event.preventDefault();navigate('table')" style="display:none">ALL</a>
     <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')">NEWS</a>
-    <a href="/submit" id="menuSubmit" onclick="event.preventDefault();navigate('submit')" class="menu-divider">SUBMIT</a>
+    <a href="javascript:void(0)" id="menuSubmit" onclick="event.stopPropagation();toggleSubmitMenu()" class="menu-divider">SUBMIT</a>
+  </div>
+  <div class="menu-overlay" id="submitMenu">
+    <a href="/submit" onclick="event.preventDefault();navigate('submit')">SERVICE</a>
+    <a href="/submit-news" onclick="event.preventDefault();navigate('submit-news')">NEWS</a>
   </div>
   <div class="header">
     <h1 onclick="navigate('table')">THE BOARDS</h1>
@@ -508,8 +512,23 @@
     <button class="submit-btn" id="submitBtn" onclick="submitListing()">SUBMIT</button>
     <div class="submit-msg" id="submitMsg"></div>
   </div>
+  <div class="submit-form" id="newsSubmitForm">
+    <label>TITLE</label>
+    <input type="text" id="nTitle" placeholder="NEWS TITLE">
+    <label>BODY</label>
+    <textarea id="nBody" placeholder="NEWS CONTENT"></textarea>
+    <label>IMAGE</label>
+    <input type="file" id="nImage" class="file-upload-input" accept="image/*" onchange="handleNewsFileSelect(this)">
+    <label for="nImage" class="file-upload-label" id="nImageLabel">CHOOSE IMAGE</label>
+    <div class="custom-check" onclick="var b=document.getElementById('nVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box" id="nVerify"></div>
+      <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTERED HERE WILL BE POSTED PUBLICLY</span>
+    </div>
+    <button class="submit-btn" id="newsSubmitBtn" onclick="submitNews()">SUBMIT</button>
+    <div class="submit-msg" id="newsSubmitMsg"></div>
+  </div>
   <div class="submit-modal" id="submitModal" onclick="submitModal.classList.remove('active'); switchMode('table');">
-    <div class="submit-modal-box">THANK YOU. SUBMISSIONS ARE APPROVED MANUALLY. YOUR LISTING SHOULD BE LIVE IN A FEW DAYS.</div>
+    <div class="submit-modal-box">THANK YOU. SUBMISSIONS ARE APPROVED MANUALLY. YOUR SUBMISSION SHOULD BE LIVE IN A FEW DAYS.</div>
   </div>
   <div class="service-dropdown" id="serviceDropdown"></div>
   <div class="table-wrapper" id="tableWrapper">
@@ -644,7 +663,25 @@
       if (cs && cs.classList.contains('open') && !cs.contains(e.target)) {
         cs.classList.remove('open');
       }
+      const sm = document.getElementById('submitMenu');
+      const submitLink = document.getElementById('menuSubmit');
+      if (sm.classList.contains('open') && !sm.contains(e.target) && e.target !== submitLink) {
+        sm.classList.remove('open');
+      }
     });
+
+    function toggleSubmitMenu() {
+      const sm = document.getElementById('submitMenu');
+      const anchor = document.getElementById('menuSubmit');
+      if (sm.classList.contains('open')) {
+        sm.classList.remove('open');
+        return;
+      }
+      const rect = anchor.getBoundingClientRect();
+      sm.style.left = (rect.right + 2) + 'px';
+      sm.style.top = rect.top + 'px';
+      sm.classList.add('open');
+    }
 
     function render() {
       const tbody = document.getElementById('tbody');
@@ -798,8 +835,10 @@
       document.getElementById('menuStar').style.display = mode === 'starred' ? 'none' : '';
       document.getElementById('menuAll').style.display = mode === 'starred' ? '' : 'none';
       document.getElementById('menuNews').style.display = mode === 'news' ? 'none' : '';
-      document.getElementById('menuSubmit').style.display = mode === 'submit' ? 'none' : '';
+      document.getElementById('menuSubmit').style.display = (mode === 'submit' || mode === 'submit-news') ? 'none' : '';
+      document.getElementById('submitMenu').classList.remove('open');
       document.getElementById('submitForm').classList.remove('active');
+      document.getElementById('newsSubmitForm').classList.remove('active');
       document.getElementById('newsFeed').classList.remove('active');
 
       if (mode === 'news') {
@@ -847,6 +886,19 @@
         const now = new Date();
         document.getElementById('fDate').value = (now.getMonth()+1) + '/' + now.getDate() + '/' + now.getFullYear();
         populateServiceDropdown();
+        updateMenuDividers();
+        return;
+      }
+
+      if (mode === 'submit-news') {
+        document.getElementById('tableWrapper').style.display = 'none';
+        document.getElementById('modeLabel').textContent = 'SUBMIT NEWS';
+        document.getElementById('modeLabel').style.display = '';
+        document.getElementById('separator2').style.display = '';
+        document.getElementById('newsSubmitForm').classList.add('active');
+        document.getElementById('newsSubmitMsg').textContent = '';
+        document.getElementById('newsSubmitBtn').disabled = false;
+        document.getElementById('newsSubmitBtn').textContent = 'SUBMIT';
         updateMenuDividers();
         return;
       }
@@ -1000,6 +1052,72 @@
       }
     }
 
+    function handleNewsFileSelect(input) {
+      const label = document.getElementById('nImageLabel');
+      if (input.files && input.files[0]) {
+        label.textContent = input.files[0].name.toUpperCase();
+        label.classList.add('has-file');
+      } else {
+        label.textContent = 'CHOOSE IMAGE';
+        label.classList.remove('has-file');
+      }
+    }
+
+    async function submitNews() {
+      const btn = document.getElementById('newsSubmitBtn');
+      const msg = document.getElementById('newsSubmitMsg');
+      const body = document.getElementById('nBody').value.trim();
+
+      if (!body) {
+        msg.textContent = 'NEWS BODY IS REQUIRED';
+        return;
+      }
+
+      if (!document.getElementById('nVerify').classList.contains('checked')) {
+        msg.textContent = 'PLEASE VERIFY THE CHECKBOX';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'SUBMITTING...';
+      msg.textContent = '';
+
+      try {
+        const payload = {
+          title: document.getElementById('nTitle').value.trim(),
+          body
+        };
+
+        const fileInput = document.getElementById('nImage');
+        if (fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          payload.image = await readFileAsBase64(file);
+          payload.imageExt = (file.name.split('.').pop().toLowerCase()) || 'jpg';
+        }
+
+        const res = await fetch('/api/submit-news', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Failed');
+        document.getElementById('nTitle').value = '';
+        document.getElementById('nBody').value = '';
+        document.getElementById('nImage').value = '';
+        document.getElementById('nImageLabel').textContent = 'CHOOSE IMAGE';
+        document.getElementById('nImageLabel').classList.remove('has-file');
+        document.getElementById('nVerify').classList.remove('checked');
+        document.getElementById('nVerify').textContent = '';
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT';
+        document.getElementById('submitModal').classList.add('active');
+      } catch (e) {
+        msg.textContent = 'SUBMISSION FAILED. TRY AGAIN.';
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT';
+      }
+    }
+
     function escapeHtml(str) {
       const div = document.createElement('div');
       div.textContent = str;
@@ -1016,7 +1134,7 @@
     }
 
     function navigate(mode) {
-      const paths = { table: '/', starred: '/starred', submit: '/submit', news: '/news' };
+      const paths = { table: '/', starred: '/starred', submit: '/submit', 'submit-news': '/submit-news', news: '/news' };
       history.pushState(null, '', paths[mode] || '/');
       switchMode(mode);
     }
@@ -1038,6 +1156,7 @@
       if (p.startsWith('/profile/')) { openProfileFromUrl(); return; }
       if (p === '/starred') switchMode('starred');
       else if (p === '/submit') switchMode('submit');
+      else if (p === '/submit-news') switchMode('submit-news');
       else if (p === '/news') switchMode('news');
       else switchMode('table');
     });
@@ -1047,6 +1166,7 @@
       if (p.startsWith('/profile/')) openProfileFromUrl();
       else if (p === '/starred') switchMode('starred');
       else if (p === '/submit') switchMode('submit');
+      else if (p === '/submit-news') switchMode('submit-news');
       else if (p === '/news') switchMode('news');
     });
   </script>

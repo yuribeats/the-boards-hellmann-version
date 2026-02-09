@@ -1,6 +1,8 @@
 const REPO = 'yuribeats/the-boards';
 const PENDING_PATH = 'data/pending.json';
 const APPROVED_PATH = 'data/approved.json';
+const PENDING_NEWS_PATH = 'data/pending-news.json';
+const NEWS_PATH = 'data/news.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -20,13 +22,21 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { id, action } = req.body;
+    const { id, action, type } = req.body;
     if (!id || !action) return res.status(400).json({ error: 'id and action required' });
     if (action !== 'approve' && action !== 'reject') {
       return res.status(400).json({ error: 'action must be approve or reject' });
     }
 
-    const pendingFile = await getFile(token, PENDING_PATH);
+    const isNews = type === 'news';
+    const pendingPath = isNews ? PENDING_NEWS_PATH : PENDING_PATH;
+
+    let pendingFile;
+    try {
+      pendingFile = await getFile(token, pendingPath);
+    } catch {
+      return res.status(404).json({ error: 'Pending file not found' });
+    }
     const pending = JSON.parse(pendingFile.content);
     const idx = pending.findIndex(s => s.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Submission not found' });
@@ -35,13 +45,20 @@ export default async function handler(req, res) {
     pending.splice(idx, 1);
 
     if (action === 'approve') {
-      const approvedFile = await getFile(token, APPROVED_PATH);
-      const approved = JSON.parse(approvedFile.content);
-      approved.push(submission);
-      await putFile(token, APPROVED_PATH, approved, approvedFile.sha, 'Update approved.json');
+      if (isNews) {
+        const newsFile = await getFile(token, NEWS_PATH).catch(() => ({ content: '[]', sha: null }));
+        const news = JSON.parse(newsFile.content);
+        news.push({ id: submission.id, title: submission.title || '', body: submission.body || '', date: submission.date || '', image: submission.image || '' });
+        await putFile(token, NEWS_PATH, news, newsFile.sha, 'Update news.json');
+      } else {
+        const approvedFile = await getFile(token, APPROVED_PATH);
+        const approved = JSON.parse(approvedFile.content);
+        approved.push(submission);
+        await putFile(token, APPROVED_PATH, approved, approvedFile.sha, 'Update approved.json');
+      }
     }
 
-    await putFile(token, PENDING_PATH, pending, pendingFile.sha, 'Update pending.json');
+    await putFile(token, pendingPath, pending, pendingFile.sha, isNews ? 'Update pending-news.json' : 'Update pending.json');
 
     return res.status(200).json({ success: true });
   } catch (err) {

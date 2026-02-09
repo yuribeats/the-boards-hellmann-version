@@ -1,5 +1,6 @@
 const REPO = 'yuribeats/the-boards';
 const FILE_PATH = 'data/pending.json';
+const NEWS_FILE_PATH = 'data/pending-news.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -19,17 +20,28 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const resp = await fetch(
-      `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}`,
-      { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
-    );
-    if (!resp.ok) throw new Error('Failed to read pending.json');
-    const data = await resp.json();
-    const content = Buffer.from(data.content, 'base64').toString('utf8');
-    const pending = JSON.parse(content);
+    const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
+
+    let pending = [];
+    try {
+      const resp = await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE_PATH}?ref=${BRANCH}`, { headers });
+      if (resp.ok) {
+        const data = await resp.json();
+        pending = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+      }
+    } catch {}
+
+    let pendingNews = [];
+    try {
+      const resp = await fetch(`https://api.github.com/repos/${REPO}/contents/${NEWS_FILE_PATH}?ref=${BRANCH}`, { headers });
+      if (resp.ok) {
+        const data = await resp.json();
+        pendingNews = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+      }
+    } catch {}
 
     res.setHeader('Cache-Control', 'no-cache');
-    return res.status(200).json({ pending });
+    return res.status(200).json({ pending, pendingNews });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
