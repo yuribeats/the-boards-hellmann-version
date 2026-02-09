@@ -210,6 +210,32 @@
       font-size: 13px;
       font-weight: 900;
     }
+    .news-post-star {
+      float: right;
+      font-size: 18px;
+      cursor: default;
+      user-select: none;
+      margin-left: 8px;
+    }
+    .news-post-star:hover { opacity: 0.5; }
+    .news-post-calendar-link {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 900;
+      margin-top: 8px;
+      border: 2px solid #000;
+      padding: 4px 8px;
+      color: #000;
+      text-decoration: none;
+      cursor: default;
+    }
+    .news-post-calendar-link:hover { background: #000; color: #fff; }
+    .starred-news-wrap {
+      display: none;
+      max-width: 600px;
+      margin: 16px auto 0;
+    }
+    .starred-news-wrap.active { display: block; }
 
     .mode-label {
       font-size: 14px;
@@ -591,6 +617,7 @@
   <hr class="separator" id="separator2" style="display:none">
   <div class="profile" id="profile"></div>
   <div class="news-feed" id="newsFeed"></div>
+  <div class="starred-news-wrap" id="starredNewsWrap"></div>
   <div class="submit-form" id="submitForm">
     <label>SERVICE TYPE</label>
     <div class="custom-select" id="fServiceSelect">
@@ -664,6 +691,10 @@
     <label>IMAGE</label>
     <input type="file" id="eImage" class="file-upload-input" accept="image/*" onchange="handleEventFileSelect(this)">
     <label for="eImage" class="file-upload-label" id="eImageLabel">CHOOSE IMAGE</label>
+    <div class="custom-check" onclick="var b=document.getElementById('ePublishNews');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box" id="ePublishNews"></div>
+      <span>PUBLISH TO NEWS FEED</span>
+    </div>
     <div class="custom-check" onclick="var b=document.getElementById('eVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
       <div class="custom-check-box" id="eVerify"></div>
       <span>I HEREBY VERIFY THAT I'M NOT DOING ANY WEIRD OR ILLEGAL STUFF AND THAT THE INFORMATION I ENTER HERE WILL BE POSTED PUBLICLY</span>
@@ -706,6 +737,18 @@
       const i = s.indexOf(key);
       if (i >= 0) s.splice(i, 1); else s.push(key);
       setStarred(s);
+    }
+
+    function getStarredNews() {
+      try { return JSON.parse(localStorage.getItem('starredNews') || '[]'); } catch { return []; }
+    }
+    function setStarredNews(arr) { localStorage.setItem('starredNews', JSON.stringify(arr)); }
+    function isNewsStarred(id) { return getStarredNews().includes(id); }
+    function toggleNewsStar(id) {
+      const s = getStarredNews();
+      const i = s.indexOf(id);
+      if (i >= 0) s.splice(i, 1); else s.push(id);
+      setStarredNews(s);
     }
 
     async function load() {
@@ -987,6 +1030,8 @@
       document.getElementById('newsSubmitForm').classList.remove('active');
       document.getElementById('eventSubmitForm').classList.remove('active');
       document.getElementById('newsFeed').classList.remove('active');
+      document.getElementById('starredNewsWrap').classList.remove('active');
+      document.getElementById('starredNewsWrap').innerHTML = '';
       document.getElementById('calendarWrap').classList.remove('active');
       document.getElementById('eventDetail').classList.remove('active');
       document.getElementById('eventDetail').innerHTML = '';
@@ -1008,14 +1053,7 @@
           } else {
             feed.innerHTML = '';
             for (const p of posts) {
-              const div = document.createElement('div');
-              div.className = 'news-post';
-              div.innerHTML = (p.image ? '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + escapeHtml(p.image) + '" alt="">' : '') +
-                (p.title ? '<div class="news-post-title">' + parseLinks(p.title) + '</div>' : '') +
-                '<div class="news-post-date">' + escapeHtml(p.date) + (p.author ? ' &mdash; ' + escapeHtml(p.author) : '') + '</div>' +
-                '<div class="news-post-body">' + parseLinks(p.body) + '</div>' +
-                (p.source === 'community' ? '<div style="font-size:11px;opacity:0.5;margin-top:8px">SUBMITTED BY COMMUNITY</div>' : '');
-              feed.appendChild(div);
+              renderNewsPost(p, feed);
             }
           }
         } catch {
@@ -1073,6 +1111,11 @@
         document.getElementById('modeLabel').style.display = '';
         document.getElementById('separator2').style.display = '';
         document.getElementById('calendarWrap').classList.add('active');
+        const params = new URLSearchParams(location.search);
+        if (params.get('m') && params.get('y')) {
+          calendarMonth = parseInt(params.get('m')) - 1;
+          calendarYear = parseInt(params.get('y'));
+        }
         loadEvents();
         updateMenuDividers();
         return;
@@ -1086,6 +1129,7 @@
         document.getElementById('menuTable').style.display = 'none';
         updateMenuDividers();
         render();
+        loadStarredNews();
         return;
       }
 
@@ -1310,6 +1354,58 @@
       });
     }
 
+    function renderNewsPost(p, container) {
+      const div = document.createElement('div');
+      div.className = 'news-post';
+      const starSpan = document.createElement('span');
+      starSpan.className = 'news-post-star';
+      starSpan.textContent = isNewsStarred(p.id) ? '\u2605' : '\u2606';
+      starSpan.addEventListener('click', () => {
+        toggleNewsStar(p.id);
+        starSpan.textContent = isNewsStarred(p.id) ? '\u2605' : '\u2606';
+      });
+      div.appendChild(starSpan);
+      let html = '';
+      if (p.image) html += '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + escapeHtml(p.image) + '" alt="">';
+      if (p.title) html += '<div class="news-post-title">' + parseLinks(p.title) + '</div>';
+      html += '<div class="news-post-date">' + escapeHtml(p.date) + (p.author ? ' &mdash; ' + escapeHtml(p.author) : '') + '</div>';
+      html += '<div class="news-post-body">' + parseLinks(p.body) + '</div>';
+      if (p.source === 'community') html += '<div style="font-size:11px;opacity:0.5;margin-top:8px">SUBMITTED BY COMMUNITY</div>';
+      if (p.eventDate) {
+        const parts = p.eventDate.split('/');
+        const m = parseInt(parts[0]);
+        const y = parseInt(parts[2]);
+        html += '<a class="news-post-calendar-link" href="/events?m=' + m + '&y=' + y + '" onclick="event.preventDefault();goToEventMonth(' + m + ',' + y + ')">VIEW ON CALENDAR</a>';
+      }
+      const inner = document.createElement('div');
+      inner.innerHTML = html;
+      while (inner.firstChild) div.appendChild(inner.firstChild);
+      container.appendChild(div);
+    }
+
+    function goToEventMonth(m, y) {
+      calendarMonth = m - 1;
+      calendarYear = y;
+      navigate('events');
+    }
+
+    async function loadStarredNews() {
+      const wrap = document.getElementById('starredNewsWrap');
+      const starred = getStarredNews();
+      if (starred.length === 0) { wrap.classList.remove('active'); return; }
+      try {
+        const res = await fetch('/api/news');
+        const data = await res.json();
+        const posts = (data.posts || []).filter(p => starred.includes(p.id));
+        if (posts.length === 0) { wrap.classList.remove('active'); return; }
+        wrap.innerHTML = '<div style="font-size:14px;font-weight:900;padding:16px 0 0;text-align:center">STARRED NEWS</div>';
+        wrap.classList.add('active');
+        for (const p of posts) {
+          renderNewsPost(p, wrap);
+        }
+      } catch {}
+    }
+
     let calendarEvents = [];
     let calendarYear = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();
@@ -1486,7 +1582,8 @@
           date,
           location: document.getElementById('eLocation').value.trim(),
           contact: document.getElementById('eContact').value.trim(),
-          site: document.getElementById('eSite').value.trim()
+          site: document.getElementById('eSite').value.trim(),
+          publishToNews: document.getElementById('ePublishNews').classList.contains('checked')
         };
 
         const fileInput = document.getElementById('eImage');
@@ -1513,6 +1610,8 @@
         document.getElementById('eImageLabel').classList.remove('has-file');
         document.getElementById('eVerify').classList.remove('checked');
         document.getElementById('eVerify').textContent = '';
+        document.getElementById('ePublishNews').classList.remove('checked');
+        document.getElementById('ePublishNews').textContent = '';
         btn.disabled = false;
         btn.textContent = 'SUBMIT';
         document.getElementById('submitModal').classList.add('active');

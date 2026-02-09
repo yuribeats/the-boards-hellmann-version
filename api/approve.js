@@ -54,6 +54,23 @@ export default async function handler(req, res) {
         const eventItem = { id: submission.id, event: submission.event || '', shortName: submission.shortName || '', date: submission.date || '', location: submission.location || '', contact: submission.contact || '', site: submission.site || '', image: submission.image || '' };
         events.push(eventItem);
         await putFile(token, EVENTS_PATH, events, eventsFile.sha, 'Update events.json');
+
+        if (submission.publishToNews) {
+          const newsFile = await getFile(token, NEWS_PATH).catch(() => ({ content: '[]', sha: null }));
+          const news = JSON.parse(newsFile.content);
+          const now = new Date();
+          const dateStr = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+          const newsItem = {
+            id: 'evt_' + submission.id,
+            title: submission.event || '',
+            body: (submission.location ? submission.location + ' — ' : '') + (submission.date || ''),
+            date: dateStr,
+            image: submission.image || '',
+            eventDate: submission.date || ''
+          };
+          news.push(newsItem);
+          await putFile(token, NEWS_PATH, news, newsFile.sha, 'Add event to news feed');
+        }
       } else if (isNews) {
         const newsFile = await getFile(token, NEWS_PATH).catch(() => ({ content: '[]', sha: null }));
         const news = JSON.parse(newsFile.content);
@@ -70,7 +87,8 @@ export default async function handler(req, res) {
       }
     }
 
-    await putFile(token, pendingPath, pending, pendingFile.sha, isNews ? 'Update pending-news.json' : 'Update pending.json');
+    const pendingMsg = isEvent ? 'Update pending-events.json' : isNews ? 'Update pending-news.json' : 'Update pending.json';
+    await putFile(token, pendingPath, pending, pendingFile.sha, pendingMsg);
 
     return res.status(200).json({ success: true });
   } catch (err) {

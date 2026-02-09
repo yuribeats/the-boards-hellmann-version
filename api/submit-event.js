@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { event, shortName, date, location, contact, site, image, imageExt } = req.body;
+    const { event, shortName, date, location, contact, site, image, imageExt, publishToNews } = req.body;
     if (!event || !date) return res.status(400).json({ error: 'Event name and date are required' });
 
     const now = new Date();
@@ -30,7 +30,8 @@ export default async function handler(req, res) {
       location: location || '',
       contact: contact || '',
       site: site || '',
-      submitted: submittedStr
+      submitted: submittedStr,
+      publishToNews: !!publishToNews
     };
 
     if (image && imageExt) {
