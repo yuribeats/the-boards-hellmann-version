@@ -177,25 +177,23 @@
     }
     .menu-overlay a:hover { background: #000; color: #fff; }
 
-    .image-feed {
+    .mosaic {
       display: none;
-      max-width: 600px;
-      margin: 0 auto;
+      column-count: 3;
+      column-gap: 8px;
+      padding: 16px 0;
     }
-    .image-feed.active { display: block; }
-    .image-card {
-      margin-bottom: 24px;
-      border-bottom: 2px solid #000;
-      padding-bottom: 16px;
+    .mosaic.active { display: block; }
+    .mosaic-tile {
+      break-inside: avoid;
+      margin-bottom: 8px;
+      cursor: default;
     }
-    .image-card img {
+    .mosaic-tile img {
       width: 100%;
       display: block;
-      margin-bottom: 8px;
     }
-    .image-card .image-info {
-      font-size: 12px;
-    }
+    .mosaic-tile:hover { opacity: 0.8; }
 
     .news-feed {
       display: none;
@@ -458,6 +456,7 @@
       th, td { padding: 8px 6px; }
       .profile { margin: 0 -12px; padding: 0 12px; }
       .profile-field { margin: 0 -12px; padding-left: 12px; }
+      .mosaic { column-count: 2; }
       .menu-overlay { top: 44px; left: 12px; }
       .menu-overlay a { font-size: 11px; padding: 10px 6px; }
       .last-updated-corner {
@@ -475,8 +474,8 @@
     <span></span><span></span><span></span>
   </div>
   <div class="menu-overlay" id="menu">
-    <a href="/image" id="menuImage" onclick="event.preventDefault();navigate('image')">IMAGE MODE</a>
-    <a href="/" id="menuTable" onclick="event.preventDefault();navigate('table')" style="display:none">TABLE MODE</a>
+    <a href="/visualize" id="menuImage" onclick="event.preventDefault();navigate('image')">VISUALIZE</a>
+    <a href="/" id="menuTable" onclick="event.preventDefault();navigate('table')" style="display:none">BOARDS</a>
     <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')">&#9733;</a>
     <a href="/" id="menuAll" onclick="event.preventDefault();navigate('table')" style="display:none">ALL</a>
     <a href="/news" id="menuNews" onclick="event.preventDefault();navigate('news')">NEWS</a>
@@ -491,7 +490,7 @@
   <div class="mode-label" id="modeLabel" style="display:none"></div>
   <hr class="separator" id="separator2" style="display:none">
   <div class="profile" id="profile"></div>
-  <div class="image-feed" id="imageFeed"></div>
+  <div class="mosaic" id="imageFeed"></div>
   <div class="news-feed" id="newsFeed"></div>
   <div class="submit-form" id="submitForm">
     <label>SERVICE TYPE</label>
@@ -875,31 +874,35 @@
 
       if (mode === 'image') {
         document.getElementById('tableWrapper').style.display = 'none';
-        document.getElementById('modeLabel').textContent = 'IMAGE MODE';
+        document.getElementById('modeLabel').textContent = 'VISUALIZE';
         document.getElementById('modeLabel').style.display = '';
         document.getElementById('separator2').style.display = '';
         const feed = document.getElementById('imageFeed');
         feed.classList.add('active');
         feed.innerHTML = '';
 
-        const imgRes = await fetch('/api/images');
-        const imgData = await imgRes.json();
-        const images = imgData.images || [];
-
-        if (images.length === 0) {
+        const withImages = rows.filter(r => r.image);
+        if (withImages.length === 0) {
           feed.innerHTML = '<div class="loading">NO IMAGES</div>';
+          updateMenuDividers();
           return;
         }
 
-        for (const file of images) {
-          const card = document.createElement('div');
-          card.className = 'image-card';
+        for (const row of withImages) {
+          const tile = document.createElement('div');
+          tile.className = 'mosaic-tile';
           const img = document.createElement('img');
-          img.src = '/images/' + file;
-          img.alt = file;
+          img.src = 'https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + row.image;
+          img.alt = row.name || '';
           img.loading = 'lazy';
-          card.appendChild(img);
-          feed.appendChild(card);
+          tile.appendChild(img);
+          tile.addEventListener('click', () => {
+            feed.classList.remove('active');
+            document.getElementById('modeLabel').style.display = 'none';
+            document.getElementById('separator2').style.display = 'none';
+            showProfile(row);
+          });
+          feed.appendChild(tile);
         }
       } else {
         document.getElementById('imageFeed').classList.remove('active');
@@ -1048,14 +1051,14 @@
     }
 
     function navigate(mode) {
-      const paths = { table: '/', image: '/image', starred: '/starred', submit: '/submit', news: '/news' };
+      const paths = { table: '/', image: '/visualize', starred: '/starred', submit: '/submit', news: '/news' };
       history.pushState(null, '', paths[mode] || '/');
       switchMode(mode);
     }
 
     window.addEventListener('popstate', () => {
       const p = location.pathname;
-      if (p === '/image') switchMode('image');
+      if (p === '/visualize') switchMode('image');
       else if (p === '/starred') switchMode('starred');
       else if (p === '/submit') switchMode('submit');
       else if (p === '/news') switchMode('news');
@@ -1064,7 +1067,7 @@
 
     load().then(() => {
       const p = location.pathname;
-      if (p === '/image') switchMode('image');
+      if (p === '/visualize') switchMode('image');
       else if (p === '/starred') switchMode('starred');
       else if (p === '/submit') switchMode('submit');
       else if (p === '/news') switchMode('news');
