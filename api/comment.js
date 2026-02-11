@@ -59,6 +59,26 @@ export default async function handler(req, res) {
 
     sendNotifications({ type: 'comments', actor: username, title: username + ' commented', body: text.slice(0, 100), token }).catch(() => {});
 
+    const participants = new Set();
+    for (const c of comments[newsId]) {
+      if (c.name && c.name !== username) participants.add(c.name);
+    }
+    try {
+      const nr = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/data/news.json?ref=${BRANCH}`,
+        { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
+      );
+      if (nr.ok) {
+        const nd = await nr.json();
+        const newsList = JSON.parse(Buffer.from(nd.content, 'base64').toString('utf8'));
+        const post = newsList.find(n => String(n.id) === String(newsId));
+        if (post && post.author && post.author !== username) participants.add(post.author);
+      }
+    } catch {}
+    if (participants.size > 0) {
+      sendNotifications({ type: 'responses', actor: username, title: username + ' replied', body: text.slice(0, 100), token, onlyUsers: Array.from(participants) }).catch(() => {});
+    }
+
     return res.status(200).json({ success: true, comments: comments[newsId] });
   } catch (err) {
     return res.status(500).json({ error: err.message });

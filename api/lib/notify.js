@@ -2,7 +2,7 @@ const REPO = 'yuribeats/the-boards-hellmann-version';
 const BRANCH = 'main';
 const NOTIF_PATH = 'data/notifications.json';
 
-export async function sendNotifications({ type, actor, title, body, token }) {
+export async function sendNotifications({ type, actor, title, body, token, onlyUsers }) {
   try {
     const resendKey = process.env.RESEND_API_KEY;
     const resendFrom = process.env.RESEND_FROM_EMAIL;
@@ -28,6 +28,7 @@ export async function sendNotifications({ type, actor, title, body, token }) {
     for (const [user, p] of Object.entries(prefs)) {
       if (user === actor) continue;
       if (!p[type]) continue;
+      if (onlyUsers && !onlyUsers.includes(user)) continue;
 
       if (p.email && resendKey && resendFrom) {
         sends.push(
