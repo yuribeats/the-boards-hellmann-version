@@ -51,6 +51,7 @@ export default async function handler(req, res) {
       for (const col of columns) {
         row[col] = item[col] || '';
       }
+      if (item.id) row.id = item.id;
       if (item.image) row.image = item.image;
       if (item.description) row.description = item.description;
       const dateVal = row['date uploaded'] || row['date'] || '';

@@ -1612,6 +1612,42 @@
         mapNote.textContent = '(WRONG SOMETIMES)';
         profile.appendChild(mapNote);
       }
+
+      if (row.id) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'submit-btn';
+        deleteBtn.style.cssText = 'display:block;width:100%;margin-top:32px;background:#fff;color:#000;border:2px solid #000';
+        deleteBtn.textContent = 'DELETE';
+        deleteBtn.addEventListener('mouseenter', () => { deleteBtn.style.background = '#000'; deleteBtn.style.color = '#fff'; });
+        deleteBtn.addEventListener('mouseleave', () => { deleteBtn.style.background = '#fff'; deleteBtn.style.color = '#000'; });
+        deleteBtn.addEventListener('click', async () => {
+          deleteBtn.disabled = true;
+          deleteBtn.textContent = 'DELETING...';
+          try {
+            const res = await fetch('/api/delete-vendor', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: row.id })
+            });
+            if (!res.ok) throw new Error('Failed');
+            const idx = rows.findIndex(r => rowKey(r) === rowKey(row));
+            if (idx >= 0) rows.splice(idx, 1);
+            profile.classList.remove('active');
+            profile.innerHTML = '';
+            document.getElementById('tableWrapper').style.display = '';
+            document.querySelector('.separator').style.display = '';
+            document.getElementById('modeLabel').innerHTML = 'VENDORS / <span class="gcal-link" onclick="navigate(\'submit\')">SUBMIT</span>';
+            document.getElementById('modeLabel').style.display = '';
+            document.getElementById('separator2').style.display = '';
+            renderTable();
+            history.pushState(null, '', '/vendors');
+          } catch (e) {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = 'DELETE';
+          }
+        });
+        profile.appendChild(deleteBtn);
+      }
     }
 
     function editVendor(row) {
