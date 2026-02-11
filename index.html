@@ -12,6 +12,9 @@
       font-display: swap;
     }
   </style>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <title>HELLMANN HARPER RYBAK</title>
   <style>
@@ -3318,5 +3321,6 @@
     }
     });
   </script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});</script>
 </body>
 </html>
