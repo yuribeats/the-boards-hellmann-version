@@ -31,9 +31,13 @@ export default async function handler(req, res) {
       }
     } catch {}
 
+    let cleanPhone = (phone || '').replace(/\D/g, '');
+    if (cleanPhone.length === 10) cleanPhone = '1' + cleanPhone;
+    if (cleanPhone && !cleanPhone.startsWith('+')) cleanPhone = '+' + cleanPhone;
+
     all[username] = {
       email: email || '',
-      phone: phone || '',
+      phone: cleanPhone,
       vendors: !!vendors,
       news: !!news,
       events: !!events,

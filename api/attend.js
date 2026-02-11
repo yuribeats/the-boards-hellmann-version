@@ -66,7 +66,20 @@ export default async function handler(req, res) {
     );
     if (!resp.ok) throw new Error('Failed to write attendance.json');
 
-    sendNotifications({ type: 'responses', actor: username, title: username + (attending ? ' is attending' : ' is not attending'), body: 'Event ' + eventId, token }).catch(() => {});
+    let eventName = 'an event';
+    try {
+      const er = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/data/events.json?ref=${BRANCH}`,
+        { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
+      );
+      if (er.ok) {
+        const ed = await er.json();
+        const eventsList = JSON.parse(Buffer.from(ed.content, 'base64').toString('utf8'));
+        const ev = eventsList.find(e => String(e.id) === String(eventId));
+        if (ev && ev.event) eventName = ev.event;
+      }
+    } catch {}
+    sendNotifications({ type: 'responses', actor: username, title: username + (attending ? ' is attending ' : ' is not attending ') + eventName, body: '', token }).catch(() => {});
 
     return res.status(200).json({ success: true, attendees: attendance[eventId] });
   } catch (err) {

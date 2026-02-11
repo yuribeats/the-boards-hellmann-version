@@ -60,7 +60,20 @@ export default async function handler(req, res) {
     );
     if (!resp.ok) throw new Error('Failed to write votes.json');
 
-    sendNotifications({ type: 'responses', actor: username, title: username + ' voted', body: 'Poll ' + newsId, token }).catch(() => {});
+    let newsTitle = 'a poll';
+    try {
+      const nr = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/data/news.json?ref=${BRANCH}`,
+        { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
+      );
+      if (nr.ok) {
+        const nd = await nr.json();
+        const newsList = JSON.parse(Buffer.from(nd.content, 'base64').toString('utf8'));
+        const post = newsList.find(n => String(n.id) === String(newsId));
+        if (post && post.title) newsTitle = post.title;
+      }
+    } catch {}
+    sendNotifications({ type: 'responses', actor: username, title: username + ' voted on ' + newsTitle, body: '', token }).catch(() => {});
 
     return res.status(200).json({ success: true, votes: votes[newsId] });
   } catch (err) {
