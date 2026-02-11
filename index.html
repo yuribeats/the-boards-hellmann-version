@@ -3339,7 +3339,11 @@
         deferredInstallPrompt.prompt();
         deferredInstallPrompt.userChoice.then(function() { deferredInstallPrompt = null; });
       } else if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) {
-        alert('TAP THE SHARE ICON (SQUARE WITH ARROW) AT THE BOTTOM OF YOUR SCREEN, THEN "ADD TO HOME SCREEN"');
+        if (/CriOS/i.test(navigator.userAgent)) {
+          alert('TAP THE SHARE BUTTON \u2B06 AT THE TOP RIGHT, THEN "ADD TO HOME SCREEN"');
+        } else {
+          alert('TAP THE THREE DOTS \u2022\u2022\u2022 AT THE BOTTOM RIGHT, THEN "ADD TO HOME SCREEN"');
+        }
       }
     }
     if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
