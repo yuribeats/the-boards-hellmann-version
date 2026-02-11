@@ -954,6 +954,7 @@
     <a href="/events" id="menuEvents" onclick="event.preventDefault();navigate('events')" class="menu-divider">EVENTS</a>
     <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')" class="menu-divider">&#9733;</a>
     <a href="/notifications" id="menuNotif" onclick="event.preventDefault();navigate('notifications')" class="menu-divider">NOTIFICATIONS</a>
+    <a href="javascript:void(0)" id="menuInstall" onclick="installApp()" class="menu-divider" style="display:none">OPEN AS APP</a>
     <a href="javascript:void(0)" id="menuLogout" onclick="doLogout()" class="menu-divider">LOGOUT</a>
   </div>
   <div class="menu-overlay" id="submitMenu">
@@ -3321,6 +3322,31 @@
     }
     });
   </script>
-  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});</script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});
+    var deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById('menuInstall').style.display = '';
+    });
+    window.addEventListener('appinstalled', function() {
+      document.getElementById('menuInstall').style.display = 'none';
+      deferredInstallPrompt = null;
+    });
+    function installApp() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(function() { deferredInstallPrompt = null; });
+      } else if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) {
+        alert('TAP THE SHARE BUTTON, THEN "ADD TO HOME SCREEN"');
+      }
+    }
+    if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+      document.getElementById('menuInstall').style.display = 'none';
+    } else if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) {
+      document.getElementById('menuInstall').style.display = '';
+    }
+  </script>
 </body>
 </html>
