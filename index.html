@@ -1287,9 +1287,9 @@
     let sortAsc = false;
     let showStarred = false;
     let serviceFilter = null;
-    const VISIBLE_COLS = ['service', 'name', 'phone', 'author', 'date uploaded', 'site'];
+    const VISIBLE_COLS = ['name', 'site_email', 'neighborhood', 'date uploaded', 'service'];
     const PROFILE_COLS = ['name', 'service', 'author', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
-    const COL_DISPLAY = { 'service': 'SERVICE', 'date uploaded': 'ADDED', 'author': 'BY' };
+    const COL_DISPLAY = { 'site_email': 'WEBSITE / EMAIL', 'neighborhood': 'ADDRESS', 'date uploaded': 'DATE', 'service': 'SERVICE TYPE' };
 
     function getStarred() {
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
@@ -1367,7 +1367,7 @@
       VISIBLE_COLS.forEach(col => {
         const th = document.createElement('th');
         th.dataset.col = col;
-        if (col !== 'service' && col !== 'name' && col !== 'phone') th.className = 'mobile-hide';
+        if (col !== 'name' && col !== 'service') th.className = 'mobile-hide';
         th.textContent = COL_DISPLAY[col] || col.toUpperCase();
         const arrow = document.createElement('span');
         arrow.className = 'sort-arrow';
@@ -1468,8 +1468,9 @@
 
       if (sortCol) {
         sorted.sort((a, b) => {
-          let va = (a[sortCol] || '').toLowerCase();
-          let vb = (b[sortCol] || '').toLowerCase();
+          const resolvedCol = sortCol === 'site_email' ? 'site' : sortCol;
+          let va = (a[resolvedCol] || '').toLowerCase();
+          let vb = (b[resolvedCol] || '').toLowerCase();
           if (sortCol.includes('date')) {
             const da = new Date(a[sortCol]);
             const db = new Date(b[sortCol]);
@@ -1507,28 +1508,31 @@
         tr.appendChild(starTd);
         VISIBLE_COLS.forEach(col => {
           const td = document.createElement('td');
-          if (col !== 'service' && col !== 'name' && col !== 'phone') td.classList.add('mobile-hide');
-          if (col === 'site' && row[col]) {
-            const a = document.createElement('a');
-            let href = row[col];
-            if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
-            a.href = href;
-            a.textContent = row[col];
-            a.target = '_blank';
-            a.style.color = '#000';
-            a.style.fontWeight = '900';
-            td.appendChild(a);
-          } else if (col === 'phone' && row[col]) {
-            const a = document.createElement('a');
-            a.href = 'tel:' + row[col].replace(/[^+\d]/g, '');
-            a.textContent = row[col];
-            a.style.color = '#000';
-            a.style.fontWeight = '900';
-            td.appendChild(a);
+          if (col !== 'name' && col !== 'service') td.classList.add('mobile-hide');
+          if (col === 'site_email') {
+            const val = row['site'] || row['email'] || '';
+            if (row['site']) {
+              const a = document.createElement('a');
+              let href = row['site'];
+              if (!/^https?:\/\//i.test(href)) href = 'https://' + href;
+              a.href = href;
+              a.textContent = row['site'];
+              a.target = '_blank';
+              a.style.color = '#000';
+              a.style.fontWeight = '900';
+              td.appendChild(a);
+            } else if (row['email']) {
+              const a = document.createElement('a');
+              a.href = 'mailto:' + row['email'];
+              a.textContent = row['email'];
+              a.style.color = '#000';
+              a.style.fontWeight = '900';
+              td.appendChild(a);
+            }
           } else {
-            td.textContent = col === 'author' ? firstName(row[col]) : (row[col] || '');
+            td.textContent = row[col] || '';
           }
-          if (col === 'name' || col === 'description') {
+          if (col === 'name') {
             td.className = 'name-link';
             td.addEventListener('click', () => showProfile(row));
           }
